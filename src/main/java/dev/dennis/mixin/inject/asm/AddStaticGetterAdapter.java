@@ -1,0 +1,60 @@
+package dev.dennis.mixin.inject.asm;
+
+import dev.dennis.mixin.hook.StaticFieldHook;
+import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.GeneratorAdapter;
+
+public class AddStaticGetterAdapter extends ClassVisitor {
+    private static final int ACCESS = Opcodes.ACC_PUBLIC;
+
+    private final String getterName;
+
+    private final String getterDesc;
+
+    private final String fieldOwner;
+
+    private final String fieldName;
+
+    private final String fieldDesc;
+
+    private final Number fieldMultiplier;
+
+    public AddStaticGetterAdapter(String getterName, String getterDesc, StaticFieldHook fieldHook,
+                                  ClassVisitor classVisitor) {
+        super(Opcodes.ASM7, classVisitor);
+        this.getterName = getterName;
+        this.getterDesc = getterDesc;
+        this.fieldOwner = fieldHook.getOwner();
+        this.fieldName = fieldHook.getName();
+        this.fieldDesc = fieldHook.getDesc();
+        this.fieldMultiplier = fieldHook.getMultiplier();
+    }
+
+    public AddStaticGetterAdapter(String getterName, String getterDesc, String fieldOwner, String fieldName,
+                                  String fieldDesc, Number fieldMultiplier, ClassVisitor classVisitor) {
+        super(Opcodes.ASM7, classVisitor);
+        this.getterName = getterName;
+        this.getterDesc = getterDesc;
+        this.fieldOwner = fieldOwner;
+        this.fieldName = fieldName;
+        this.fieldDesc = fieldDesc;
+        this.fieldMultiplier = fieldMultiplier;
+    }
+
+    @Override
+    public void visitEnd() {
+        MethodVisitor mv = visitMethod(ACCESS, getterName, getterDesc, null, null);
+
+        GeneratorAdapter genAdapter = new GeneratorAdapter(mv, ACCESS, getterName, getterDesc);
+
+        genAdapter.getStatic(Type.getObjectType(fieldOwner), fieldName, Type.getObjectType(fieldDesc));
+        genAdapter.returnValue();
+        genAdapter.visitMaxs(1, 0);
+        genAdapter.visitEnd();
+
+        super.visitEnd();
+    }
+}
