@@ -17,6 +17,15 @@ public class MethodHook {
         this.dummyValue = dummyValue;
     }
 
+    @Override
+    public String toString() {
+        return "MethodHook{" +
+                "name='" + name + '\'' +
+                ", desc='" + desc + '\'' +
+                ", dummyValue=" + dummyValue +
+                '}';
+    }
+
     public String getName() {
         return name;
     }

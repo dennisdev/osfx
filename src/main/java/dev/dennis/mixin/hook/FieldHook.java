@@ -17,6 +17,15 @@ public class FieldHook {
         this.multiplier = multiplier;
     }
 
+    @Override
+    public String toString() {
+        return "FieldHook{" +
+                "name='" + name + '\'' +
+                ", desc='" + desc + '\'' +
+                ", multiplier=" + multiplier +
+                '}';
+    }
+
     public String getName() {
         return name;
     }

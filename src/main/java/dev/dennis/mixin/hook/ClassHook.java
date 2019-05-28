@@ -13,6 +13,15 @@ public class ClassHook {
         this.methods = methods;
     }
 
+    @Override
+    public String toString() {
+        return "ClassHook{" +
+                "name='" + name + '\'' +
+                ", fields=" + fields +
+                ", methods=" + methods +
+                '}';
+    }
+
     public FieldHook getField(String name) {
         return fields.get(name);
     }

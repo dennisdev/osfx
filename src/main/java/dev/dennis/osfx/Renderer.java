@@ -96,6 +96,12 @@ public class Renderer implements Callbacks {
         client.start();
     }
 
+    private void stopClient() {
+        // This blocks for 5 seconds
+        client.stop();
+        client.destroy();
+    }
+
     public void start(OsrsConfig config) throws IOException {
         startClient(config);
 
@@ -152,13 +158,13 @@ public class Renderer implements Callbacks {
                 throw new RuntimeException("Failed to initialize BGFX");
             }
 
-            rendererType = bgfx_get_renderer_type();
+            BGFXCaps caps = bgfx_get_caps();
+
+            rendererType = caps.rendererType();
             String rendererName = bgfx_get_renderer_name(rendererType);
             System.out.println("Using renderer: " + rendererName);
 
             format = init.resolution().format();
-
-            BGFXCaps caps = bgfx_get_caps();
 
             if (DEBUG) {
                 bgfx_set_debug(BGFX_DEBUG_TEXT | BGFX_DEBUG_STATS);
@@ -228,7 +234,6 @@ public class Renderer implements Callbacks {
                 bgfx_update_texture_2d(textureId, 0, 0, 0, 0,
                         canvas.getWidth(), canvas.getHeight(), bgfx_make_ref(textureData), 0xFFFF);
 
-
                 long encoder = bgfx_begin();
 
                 bgfx_encoder_set_texture(encoder, 0, (short) 0, textureId, BGFX_SAMPLER_NONE);
@@ -271,8 +276,7 @@ public class Renderer implements Callbacks {
 
             System.out.println("GLFW Terminated");
 
-            client.stop();
-            client.destroy();
+            stopClient();
 
             System.out.println("Destroyed");
 

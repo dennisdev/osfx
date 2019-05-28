@@ -20,6 +20,16 @@ public class StaticMethodHook {
         this.dummyValue = dummyValue;
     }
 
+    @Override
+    public String toString() {
+        return "StaticMethodHook{" +
+                "owner='" + owner + '\'' +
+                ", name='" + name + '\'' +
+                ", desc='" + desc + '\'' +
+                ", dummyValue=" + dummyValue +
+                '}';
+    }
+
     public String getOwner() {
         return owner;
     }

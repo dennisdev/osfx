@@ -12,6 +12,14 @@ public class StaticHooks {
         this.methods = methods;
     }
 
+    @Override
+    public String toString() {
+        return "StaticHooks{" +
+                "fields=" + fields +
+                ", methods=" + methods +
+                '}';
+    }
+
     public StaticFieldHook getField(String name) {
         return fields.get(name);
     }

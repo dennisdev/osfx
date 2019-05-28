@@ -20,6 +20,16 @@ public class StaticFieldHook {
         this.multiplier = multiplier;
     }
 
+    @Override
+    public String toString() {
+        return "StaticFieldHook{" +
+                "owner='" + owner + '\'' +
+                ", name='" + name + '\'' +
+                ", desc='" + desc + '\'' +
+                ", multiplier=" + multiplier +
+                '}';
+    }
+
     public String getOwner() {
         return owner;
     }

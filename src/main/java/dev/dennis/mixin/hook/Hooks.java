@@ -3,21 +3,29 @@ package dev.dennis.mixin.hook;
 import java.util.Map;
 
 public class Hooks {
-    private final Map<String, ClassHook> classHooks;
+    private final Map<String, ClassHook> classes;
 
-    private final StaticHooks staticHooks;
+    private final StaticHooks statics;
 
-    public Hooks(Map<String, ClassHook> classHooks, StaticHooks staticHooks) {
-        this.classHooks = classHooks;
-        this.staticHooks = staticHooks;
+    public Hooks(Map<String, ClassHook> classes, StaticHooks statics) {
+        this.classes = classes;
+        this.statics = statics;
+    }
+
+    @Override
+    public String toString() {
+        return "Hooks{" +
+                "classes=" + classes +
+                ", statics=" + statics +
+                '}';
     }
 
     public ClassHook getClassHook(String name) {
-        return classHooks.get(name);
+        return classes.get(name);
     }
 
     public FieldHook getField(String className, String fieldName) {
-        ClassHook classHook = classHooks.get(className);
+        ClassHook classHook = classes.get(className);
         if (classHook == null) {
             return null;
         }
@@ -25,7 +33,7 @@ public class Hooks {
     }
 
     public MethodHook getMethod(String className, String methodName) {
-        ClassHook classHook = classHooks.get(className);
+        ClassHook classHook = classes.get(className);
         if (classHook == null) {
             return null;
         }
@@ -33,18 +41,18 @@ public class Hooks {
     }
 
     public StaticFieldHook getStaticField(String name) {
-        return staticHooks.getField(name);
+        return statics.getField(name);
     }
 
     public StaticMethodHook getStaticMethod(String name) {
-        return staticHooks.getMethod(name);
+        return statics.getMethod(name);
     }
 
-    public Map<String, ClassHook> getClassHooks() {
-        return classHooks;
+    public Map<String, ClassHook> getClasses() {
+        return classes;
     }
 
-    public StaticHooks getStaticHooks() {
-        return staticHooks;
+    public StaticHooks getStatics() {
+        return statics;
     }
 }
