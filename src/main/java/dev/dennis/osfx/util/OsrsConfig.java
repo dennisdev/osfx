@@ -3,6 +3,7 @@ package dev.dennis.osfx.util;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,11 +18,15 @@ public class OsrsConfig {
     }
 
     public static OsrsConfig load(URL url) throws IOException {
+        return load(new InputStreamReader(url.openStream()));
+    }
+
+    public static OsrsConfig load(Reader reader) throws IOException {
         Map<String, String> appletProperties = new HashMap<>();
         Map<String, String> classLoaderProperties = new HashMap<>();
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()))) {
-            reader.lines().forEach(line -> {
+        try (BufferedReader bufferedReader = new BufferedReader(reader)) {
+            bufferedReader.lines().forEach(line -> {
                 if (line.startsWith("param=")) {
                     String pair = line.substring(6);
                     String[] split = pair.split("=", 2);

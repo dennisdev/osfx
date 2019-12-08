@@ -30,7 +30,7 @@ import static org.lwjgl.glfw.GLFW.glfwTerminate;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class Renderer implements Callbacks {
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     private static final String TITLE = "OSFX";
 
@@ -609,16 +609,17 @@ public class Renderer implements Callbacks {
     @Override
     public void onFrameStart() {
         //System.out.println("frame start: " + System.currentTimeMillis());
+
+        try {
+            barrier.await();
+        } catch (Exception e) {
+        }
     }
 
     @Override
     public void onFrameEnd() {
         try {
             barrier.await();
-        } catch (Exception e) {
-        }
-        try {
-//            barrier.await();
         } catch (Exception e) {
         }
         //System.out.println("frame end: " + System.currentTimeMillis());
