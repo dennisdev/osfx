@@ -1,0 +1,78 @@
+{
+  "statics": {
+    "fields": {
+      "client": {
+        "owner": "aa",
+        "name": "as",
+        "desc": "client"
+      },
+      "bufferProvider": {
+        "owner": "gu",
+        "name": "az",
+        "desc": "lp"
+      }
+    },
+    "methods": {
+
+    }
+  },
+  "classes": {
+    "GameEngine": {
+      "name": "bo",
+      "fields": {
+        "canvas": {
+          "name": "aw",
+          "desc": "java/awt/Canvas"
+        }
+      },
+      "methods": {
+        "post": {
+          "name": "h",
+          "desc": "(Ljava/lang/Object;I)V",
+          "dummyValue": -391960941
+        }
+      }
+    },
+    "Client": {
+      "name": "client",
+      "fields": {},
+      "methods": {}
+    },
+    "BufferProvider": {
+      "name": "lp",
+      "fields": {
+        "pixels": {
+          "name": "b",
+          "desc": "[I"
+        }
+      },
+      "methods": {}
+    },
+    "MainBufferProvider": {
+      "name": "bi",
+      "fields": {
+        "image": {
+          "name": "f",
+          "desc": "java/awt/Image"
+        }
+      },
+      "methods": {}
+    },
+    "Timer": {
+      "name": "fp",
+      "fields": {},
+      "methods": {}
+    },
+    "NanoTimer": {
+      "name": "fz",
+      "fields": {},
+      "methods": {
+        "sleep": {
+          "name": "f",
+          "desc": "(IIB)I",
+          "dummyValue": 6
+        }
+      }
+    }
+  }
+}

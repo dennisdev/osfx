@@ -23,7 +23,6 @@ public abstract class GameEngineMixin implements GameEngine {
     @Override
     public abstract Canvas getCanvas();
 
-
     public String getParameter(String key) {
         return stub.getParameter(key);
     }
@@ -39,7 +38,6 @@ public abstract class GameEngineMixin implements GameEngine {
     public AppletContext getAppletContext() {
         return stub.getAppletContext();
     }
-
 
     @Inject("post")
     private void onFrameEnd() {

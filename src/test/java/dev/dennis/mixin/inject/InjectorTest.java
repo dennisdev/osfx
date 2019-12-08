@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 
 public class InjectorTest {
     public static void main(String[] args) throws Exception {
-        int version = 180;
+        int version = 186;
 
         Hooks hooks = loadHooks(version);
 

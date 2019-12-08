@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
-    private static final Path INJECTED_PATH = Paths.get("180_injected.jar");
+    private static final Path INJECTED_PATH = Paths.get("186_injected.jar");
 
     public static void main(String[] args) throws Exception {
         OsrsConfig config = OsrsConfig.load("http://oldschool83.runescape.com/jav_config.ws");

@@ -244,7 +244,7 @@ public class Renderer implements Callbacks {
                 bgfx_end(encoder);
 
                 try {
-                    barrier.await();
+//                    barrier.await();
                 } catch (Exception e) {
                 }
 
@@ -618,7 +618,7 @@ public class Renderer implements Callbacks {
         } catch (Exception e) {
         }
         try {
-            barrier.await();
+//            barrier.await();
         } catch (Exception e) {
         }
         //System.out.println("frame end: " + System.currentTimeMillis());

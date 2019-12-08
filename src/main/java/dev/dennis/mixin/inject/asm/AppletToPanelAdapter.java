@@ -69,7 +69,7 @@ public class AppletToPanelAdapter extends ClassVisitor {
         public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
             // TODO move this to a mixin
             // Set awt clipboard
-            if (owner.equals("client") && name.equals("e") && opcode == Opcodes.INVOKEVIRTUAL) {
+            if (owner.equals("client") && name.equals("w") && opcode == Opcodes.INVOKEVIRTUAL) {
                 super.visitInsn(Opcodes.POP2);
                 return;
             }
