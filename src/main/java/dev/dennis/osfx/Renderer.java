@@ -74,9 +74,6 @@ public class Renderer implements Callbacks {
     }
 
     private static Point translateToCanvas(Canvas canvas, int x, int y) {
-        if (!isPointOnCanvas(canvas, x, y)) {
-            return new Point(-1, -1);
-        }
         Point loc = canvas.getLocation();
         return new Point(x - loc.x, y - loc.y);
     }
@@ -200,10 +197,11 @@ public class Renderer implements Callbacks {
                 bgfx_set_view_rect(0, 0, 0, width, height);
                 bgfx_dbg_text_clear(0, false);
 
-                try {
-                    barrier.await();
-                } catch (Exception e) {
-                }
+                sync();
+
+                glfwPollEvents();
+
+                sync();
 
                 ortho.setOrthoLH(0.0f, width, height, 0.0f, 0.0f, 1.0f, !caps.homogeneousDepth());
                 ortho.get(orthoBuf);
@@ -243,11 +241,11 @@ public class Renderer implements Callbacks {
 
                 bgfx_end(encoder);
 
-                try {
-//                    barrier.await();
-                } catch (Exception e) {
-                }
+                glfwPollEvents();
 
+                sync();
+
+                glfwPollEvents();
 
                 bgfx_touch(0);
 
@@ -282,6 +280,27 @@ public class Renderer implements Callbacks {
 
             // For some reason the AWT thread keeps running which prevents this process from stopping
             System.exit(0);
+        }
+    }
+
+    @Override
+    public void onFrameStart() {
+//        System.out.println("frame start: " + System.currentTimeMillis());
+        sync();
+    }
+
+    @Override
+    public void onFrameEnd() {
+        sync();
+        sync();
+//        System.out.println("frame end: " + System.currentTimeMillis());
+    }
+
+    private void sync() {
+        try {
+            barrier.await();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -488,35 +507,31 @@ public class Renderer implements Callbacks {
     }
 
     private void onMouseMoved(long window, double x, double y) {
-        // TODO Mouse dragging
         Canvas canvas = client.getCanvas();
         if (canvas != null) {
-            Point canvasPoint = translateToCanvas(canvas, (int) x, (int) y);
-            boolean onCanvas = isPointOnCanvas(canvas, (int) x, (int) y);
+            int realX = (int) x;
+            int realY = (int) y;
+            Point canvasPoint = translateToCanvas(canvas, realX, realY);
             MouseEvent event = new MouseEvent(canvas, 0, System.currentTimeMillis(), 0,
                     canvasPoint.x, canvasPoint.y, 0, false);
-            if (isPointOnCanvas(canvas, lastMouseX, lastMouseY) && !onCanvas) {
-                for (MouseListener listener : canvas.getMouseListeners()) {
-                    listener.mouseExited(event);
-                }
-            } else if (onCanvas) {
-                for (MouseMotionListener listener : canvas.getMouseMotionListeners()) {
-                    listener.mouseMoved(event);
-                }
+            for (MouseMotionListener listener : canvas.getMouseMotionListeners()) {
+                listener.mouseMoved(event);
             }
-            lastMouseX = (int) x;
-            lastMouseY = (int) y;
+            lastMouseX = realX;
+            lastMouseY = realY;
         }
     }
 
     private void onMouseEntered(long window, boolean entered) {
         Canvas canvas = client.getCanvas();
         if (canvas != null) {
-            double[] x = new double[1];
-            double[] y = new double[1];
-            glfwGetCursorPos(window, x, y);
-            Point canvasPoint = translateToCanvas(canvas, (int) x[0], (int) y[0]);
-            boolean onCanvas = isPointOnCanvas(canvas, (int) x[0], (int) y[0]);
+            double[] xArr = new double[1];
+            double[] yArr = new double[1];
+            glfwGetCursorPos(window, xArr, yArr);
+            int x = (int) xArr[0];
+            int y = (int) yArr[0];
+            Point canvasPoint = translateToCanvas(canvas, x, y);
+            boolean onCanvas = isPointOnCanvas(canvas, x, y);
             boolean wasOnCanvas = isPointOnCanvas(canvas, lastMouseX, lastMouseY);
             MouseEvent event = new MouseEvent(canvas, 0, System.currentTimeMillis(), 0,
                     canvasPoint.x, canvasPoint.y, 0, false);
@@ -537,7 +552,7 @@ public class Renderer implements Callbacks {
             double[] x = new double[1];
             double[] y = new double[1];
             glfwGetCursorPos(window, x, y);
-            if (!isPointOnCanvas(canvas, (int) x[0], (int) y[0])) {
+            if (!isPointOnCanvas(canvas, (int) x[0], (int) y[0]) && action == GLFW_PRESS) {
                 return;
             }
             Point canvasPoint = translateToCanvas(canvas, (int) x[0], (int) y[0]);
@@ -604,24 +619,5 @@ public class Renderer implements Callbacks {
 
     private void refresh(long window) {
         System.out.println("Refresh");
-    }
-
-    @Override
-    public void onFrameStart() {
-        //System.out.println("frame start: " + System.currentTimeMillis());
-
-        try {
-            barrier.await();
-        } catch (Exception e) {
-        }
-    }
-
-    @Override
-    public void onFrameEnd() {
-        try {
-            barrier.await();
-        } catch (Exception e) {
-        }
-        //System.out.println("frame end: " + System.currentTimeMillis());
     }
 }
