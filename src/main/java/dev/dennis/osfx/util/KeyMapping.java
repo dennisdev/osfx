@@ -2,6 +2,7 @@ package dev.dennis.osfx.util;
 
 import com.google.common.collect.ImmutableMap;
 
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 
 import static org.lwjgl.glfw.GLFW.*;
@@ -67,7 +68,21 @@ public class KeyMapping {
             .put(GLFW_KEY_KP_ENTER, KeyEvent.VK_ENTER)
             .build();
 
-    public static int mapGlfwToJava(int key) {
+    public static int mapGlfwKeyToJava(int key) {
         return GLFW_TO_JAVA.getOrDefault(key, key);
+    }
+
+    public static int mapGlfwModifiersToJava(int mods) {
+        int modifiers = 0;
+        if ((mods & GLFW_MOD_SHIFT) != 0) {
+            modifiers |= InputEvent.SHIFT_MASK;
+        }
+        if ((mods & GLFW_MOD_CONTROL) != 0) {
+            modifiers |= InputEvent.CTRL_MASK;
+        }
+        if ((mods & GLFW_MOD_ALT) != 0) {
+            modifiers |= InputEvent.ALT_MASK;
+        }
+        return modifiers;
     }
 }

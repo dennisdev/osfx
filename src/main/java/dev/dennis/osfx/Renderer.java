@@ -482,18 +482,11 @@ public class Renderer implements Callbacks {
         System.out.println(key + ", " + scanCode + ", " + action + ", " + mods);
         Canvas canvas = client.getCanvas();
         if (canvas != null) {
-            int modifiers = 0;
-            // TODO all modifiers
-            if ((mods & GLFW_MOD_SHIFT) != 0) {
-                modifiers = InputEvent.SHIFT_MASK;
-            }
-            if ((mods & GLFW_MOD_CONTROL) != 0) {
-                modifiers = InputEvent.CTRL_MASK;
-            }
-            key = KeyMapping.mapGlfwToJava(key);
+            key = KeyMapping.mapGlfwKeyToJava(key);
             if (key == -1) {
                 return;
             }
+            int modifiers = KeyMapping.mapGlfwModifiersToJava(mods);
             KeyEvent event = new KeyEvent(canvas, 0, 0, modifiers, key, '\0');
             for (KeyListener listener : canvas.getKeyListeners()) {
                 if (action == GLFW_RELEASE) {
