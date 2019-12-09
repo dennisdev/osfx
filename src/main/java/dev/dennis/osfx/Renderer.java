@@ -2,6 +2,7 @@ package dev.dennis.osfx;
 
 import dev.dennis.osfx.api.BufferProvider;
 import dev.dennis.osfx.api.Client;
+import dev.dennis.osfx.util.KeyMapping;
 import dev.dennis.osfx.util.OsrsAppletStub;
 import dev.dennis.osfx.util.OsrsConfig;
 import dev.dennis.osfx.util.ResourceUtil;
@@ -489,11 +490,9 @@ public class Renderer implements Callbacks {
             if ((mods & GLFW_MOD_CONTROL) != 0) {
                 modifiers = InputEvent.CTRL_MASK;
             }
-            // TODO all non character keys
-            if (key == GLFW_KEY_ENTER) {
-                key = KeyEvent.VK_ENTER;
-            } else if (key == GLFW_KEY_BACKSPACE) {
-                key = KeyEvent.VK_BACK_SPACE;
+            key = KeyMapping.mapGlfwToJava(key);
+            if (key == -1) {
+                return;
             }
             KeyEvent event = new KeyEvent(canvas, 0, 0, modifiers, key, '\0');
             for (KeyListener listener : canvas.getKeyListeners()) {
