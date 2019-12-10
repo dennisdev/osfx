@@ -46,4 +46,7 @@ public abstract class GameEngineMixin implements GameEngine {
             callbacks.onFrameEnd();
         }
     }
+
+    @Copy("setupClipboard")
+    public abstract void rs$setupClipboard();
 }

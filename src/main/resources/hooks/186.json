@@ -30,6 +30,11 @@
           "name": "h",
           "desc": "(Ljava/lang/Object;I)V",
           "dummyValue": -391960941
+        },
+        "setupClipboard": {
+          "name": "w",
+          "desc": "(I)V",
+          "dummyValue": 1232345027
         }
       }
     },

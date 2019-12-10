@@ -7,6 +7,7 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Type;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -90,33 +91,11 @@ public class Injector {
 
         for (Method method : mixinClass.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Getter.class)) {
-                Getter getter = method.getAnnotation(Getter.class);
-                boolean isStatic = method.isAnnotationPresent(Static.class);
-                String methodDesc = Type.getMethodDescriptor(method);
-                if (isStatic) {
-                    StaticFieldHook fieldHook = hooks.getStaticField(getter.value());
-                    if (fieldHook == null) {
-                        throw new IllegalStateException("No static field hook found for " + getter.value());
-                    }
-                    adapters.put(obfClassName, new AddStaticGetterAdapter(method.getName(), methodDesc, fieldHook,
-                            delegate(obfClassName)));
-                } else {
-                    FieldHook fieldHook = classHook.getField(getter.value());
-                    if (fieldHook == null) {
-                        throw new IllegalStateException("No field hook found for " + mixin.value() + "."
-                                + getter.value());
-                    }
-                    adapters.put(obfClassName, new AddGetterAdapter(method.getName(), methodDesc, fieldHook,
-                            delegate(obfClassName)));
-                }
+                addGetterAdapter(mixin, classHook, method);
             } else if (method.isAnnotationPresent(Inject.class)) {
-                Inject inject = method.getAnnotation(Inject.class);
-                MethodHook methodHook = classHook.getMethod(inject.value());
-                if (methodHook == null) {
-                    throw new IllegalStateException("No method hook found for " + mixin.value() + "." + inject.value());
-                }
-                adapters.put(obfClassName, new AddInjectCallbackAdapter(method, methodHook.getName(),
-                        methodHook.getDesc(), inject.end(), delegate(obfClassName)));
+                addInjectCallbackAdapter(mixin, classHook, method);
+            } else if (method.isAnnotationPresent(Copy.class)) {
+                addCopyMethodAdapter(mixin, classHook, method);
             }
 
             if (!Modifier.isAbstract(method.getModifiers())) {
@@ -127,6 +106,68 @@ public class Injector {
             adapters.put(obfClassName, new AddMethodsAdapter(hooks, mixinClass, methodsToCopy, delegate(obfClassName)));
         }
 
+    }
+
+    private void addCopyMethodAdapter(Mixin mixin, ClassHook classHook, Method method) {
+        Copy copy = method.getAnnotation(Copy.class);
+        boolean isStatic = method.isAnnotationPresent(Static.class);
+        String owner;
+        String name;
+        String desc;
+        if (isStatic) {
+            throw new NotImplementedException();
+        } else {
+            MethodHook methodHook = classHook.getMethod(copy.value());
+            if (methodHook == null) {
+                throw new IllegalStateException("No method hook found for " + mixin.value() + "." + copy.value());
+            }
+            owner = classHook.getName();
+            name = methodHook.getName();
+            desc = methodHook.getDesc();
+        }
+
+        adapters.put(owner, new CopyMethodAdapter(delegate(owner), name, desc,
+                delegate(classHook.getName()), method.getName()));
+    }
+
+    private void addGetterAdapter(Mixin mixin, ClassHook classHook, Method method) {
+        if (!Modifier.isAbstract(method.getModifiers())) {
+            throw new IllegalStateException("Getter method " + mixin.value() + "." + method.getName()
+                    + " must be abstract");
+        }
+        Getter getter = method.getAnnotation(Getter.class);
+        boolean isStatic = method.isAnnotationPresent(Static.class);
+        String methodDesc = Type.getMethodDescriptor(method);
+        if (isStatic) {
+            StaticFieldHook fieldHook = hooks.getStaticField(getter.value());
+            if (fieldHook == null) {
+                throw new IllegalStateException("No static field hook found for " + getter.value());
+            }
+            adapters.put(classHook.getName(), new AddStaticGetterAdapter(method.getName(), methodDesc, fieldHook,
+                    delegate(classHook.getName())));
+        } else {
+            FieldHook fieldHook = classHook.getField(getter.value());
+            if (fieldHook == null) {
+                throw new IllegalStateException("No field hook found for " + mixin.value() + "."
+                        + getter.value());
+            }
+            adapters.put(classHook.getName(), new AddGetterAdapter(method.getName(), methodDesc, fieldHook,
+                    delegate(classHook.getName())));
+        }
+    }
+
+    private void addInjectCallbackAdapter(Mixin mixin, ClassHook classHook, Method method) {
+        Inject inject = method.getAnnotation(Inject.class);
+        boolean isStatic = method.isAnnotationPresent(Static.class);
+        if (isStatic) {
+            throw new NotImplementedException();
+        }
+        MethodHook methodHook = classHook.getMethod(inject.value());
+        if (methodHook == null) {
+            throw new IllegalStateException("No method hook found for " + mixin.value() + "." + inject.value());
+        }
+        adapters.put(classHook.getName(), new AddInjectCallbackAdapter(method, methodHook.getName(),
+                methodHook.getDesc(), inject.end(), delegate(classHook.getName())));
     }
 
     public void inject(Path jarPath, Path outputPath) throws IOException {
