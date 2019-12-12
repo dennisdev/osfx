@@ -20,6 +20,7 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.concurrent.CyclicBarrier;
 
 import static org.lwjgl.bgfx.BGFX.*;
@@ -178,7 +179,7 @@ public class Renderer implements Callbacks {
             BGFXTextureInfo textureInfo = BGFXTextureInfo.mallocStack(stack);
             bgfx_calc_texture_size(textureInfo, MAX_WIDTH, MAX_HEIGHT, 1, false, false,
                     1, BGFX_TEXTURE_FORMAT_RGB8);
-            ByteBuffer textureData = MemoryUtil.memAlloc(textureInfo.storageSize());
+            IntBuffer textureData = MemoryUtil.memAllocInt(textureInfo.storageSize() / 4);
 
             short program = createProgram("vs_quad", "fs_quad");
 
@@ -214,12 +215,7 @@ public class Renderer implements Callbacks {
                 BufferProvider bufferProvider = client.getBufferProvider();
                 int[] pixels = bufferProvider.getPixels();
                 textureData.clear();
-                for (int i = 0; i < pixels.length; i++) {
-                    int rgb = pixels[i];
-                    textureData.put((byte) (rgb >> 16));
-                    textureData.put((byte) (rgb >> 8));
-                    textureData.put((byte) (rgb & 0xFF));
-                }
+                textureData.put(pixels);
                 textureData.flip();
 
                 if (textureId == -1 || !canvas.getSize().equals(lastCanvasSize)) {
@@ -227,7 +223,7 @@ public class Renderer implements Callbacks {
                         bgfx_destroy_texture(textureId);
                     }
                     textureId = bgfx_create_texture_2d(canvas.getWidth(), canvas.getHeight(), false, 1,
-                            BGFX_TEXTURE_FORMAT_RGB8, BGFX_TEXTURE_NONE, null);
+                            BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, null);
                     lastCanvasSize = canvas.getSize();
                 }
                 bgfx_update_texture_2d(textureId, 0, 0, 0, 0,
@@ -599,7 +595,7 @@ public class Renderer implements Callbacks {
     }
 
     private void resize(long window, int width, int height) {
-        if (width < MIN_WIDTH || height < MIN_HEIGHT) {
+        if (width < MIN_WIDTH || height < MIN_HEIGHT || (this.width == width && this.height == height)) {
             return;
         }
         System.out.println("Resize " + width + ", " + height);
