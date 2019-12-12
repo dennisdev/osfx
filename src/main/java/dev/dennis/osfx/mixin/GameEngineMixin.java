@@ -54,6 +54,16 @@ public abstract class GameEngineMixin implements GameEngine {
         }
     }
 
+    @Copy("setClipboardContents")
+    public abstract void rs$setClipboardContents(String text);
+
+    @Replace("setClipboardContents")
+    public void hd$setClipboardContents(String text) {
+        if (getClipboard() != null) {
+            rs$setClipboardContents(text);
+        }
+    }
+
     @Getter("canvas")
     @Override
     public abstract Canvas getCanvas();

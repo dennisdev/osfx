@@ -39,6 +39,11 @@
           "name": "w",
           "desc": "(I)V",
           "dummyValue": 1232345027
+        },
+        "setClipboardContents": {
+          "name": "i",
+          "desc": "(Ljava/lang/String;I)V",
+          "dummyValue": 724915000
         }
       }
     },
