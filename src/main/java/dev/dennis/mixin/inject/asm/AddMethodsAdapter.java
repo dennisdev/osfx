@@ -113,6 +113,7 @@ public class AddMethodsAdapter extends ClassVisitor {
             if (owner.equals(Type.getType(mixinClass).getInternalName())) {
                 Mixin mixin = mixinClass.getAnnotation(Mixin.class);
                 ClassHook classHook = hooks.getClassHook(mixin.value());
+                owner = classHook.getName();
                 Method method = null;
                 for (Method m : mixinClass.getDeclaredMethods()) {
                     if (m.getName().equals(name) && Type.getMethodDescriptor(m).equals(descriptor)) {
@@ -132,7 +133,6 @@ public class AddMethodsAdapter extends ClassVisitor {
                     if (methodHook == null) {
                         throw new IllegalStateException("No method hook found for " + mixin.value() + "." + hookName);
                     }
-                    owner = classHook.getName();
                     descriptor = methodHook.getDesc();
                     if (methodHook.getDummyValue() != null) {
                         push(methodHook.getDummyValue());
