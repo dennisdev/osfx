@@ -22,8 +22,8 @@ public class AddStaticGetterAdapter extends ClassVisitor {
 
     private final Number fieldMultiplier;
 
-    public AddStaticGetterAdapter(String getterName, String getterDesc, StaticFieldHook fieldHook,
-                                  ClassVisitor classVisitor) {
+    public AddStaticGetterAdapter(ClassVisitor classVisitor, String getterName, String getterDesc,
+                                  StaticFieldHook fieldHook) {
         super(Opcodes.ASM7, classVisitor);
         this.getterName = getterName;
         this.getterDesc = getterDesc;
@@ -48,12 +48,12 @@ public class AddStaticGetterAdapter extends ClassVisitor {
     public void visitEnd() {
         MethodVisitor mv = visitMethod(ACCESS, getterName, getterDesc, null, null);
 
-        GeneratorAdapter genAdapter = new GeneratorAdapter(mv, ACCESS, getterName, getterDesc);
+        GeneratorAdapter gen = new GeneratorAdapter(mv, ACCESS, getterName, getterDesc);
 
-        genAdapter.getStatic(Type.getObjectType(fieldOwner), fieldName, Type.getObjectType(fieldDesc));
-        genAdapter.returnValue();
-        genAdapter.visitMaxs(1, 0);
-        genAdapter.visitEnd();
+        gen.getStatic(Type.getObjectType(fieldOwner), fieldName, Type.getObjectType(fieldDesc));
+        gen.returnValue();
+        gen.visitMaxs(0, 0);
+        gen.visitEnd();
 
         super.visitEnd();
     }

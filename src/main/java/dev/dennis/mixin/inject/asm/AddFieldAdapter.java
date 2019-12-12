@@ -13,7 +13,7 @@ public class AddFieldAdapter extends ClassVisitor {
 
     private boolean exists;
 
-    public AddFieldAdapter(int fieldAccess, String fieldName, String fieldDesc, ClassVisitor classVisitor) {
+    public AddFieldAdapter(ClassVisitor classVisitor, int fieldAccess, String fieldName, String fieldDesc) {
         super(Opcodes.ASM7, classVisitor);
         this.fieldAccess = fieldAccess;
         this.fieldName = fieldName;

@@ -22,12 +22,12 @@ public class CopyMethodAdapter extends ClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+        MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
         if (name.equals(this.name) && descriptor.equals(this.desc)) {
-            MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
             MethodVisitor copy = destClassVisitor.visitMethod(access, destName, descriptor, signature, exceptions);
             return new CopyMethodVisitor(mv, copy);
         }
-        return super.visitMethod(access, name, descriptor, signature, exceptions);
+        return mv;
     }
 
     private class CopyMethodVisitor extends MethodVisitor {

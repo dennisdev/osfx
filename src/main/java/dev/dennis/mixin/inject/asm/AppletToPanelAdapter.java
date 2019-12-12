@@ -12,7 +12,7 @@ public class AppletToPanelAdapter extends ClassVisitor {
 
     private final Type gameEngineType;
 
-    public AppletToPanelAdapter(Type gameEngineType, ClassVisitor classVisitor) {
+    public AppletToPanelAdapter(ClassVisitor classVisitor, Type gameEngineType) {
         super(Opcodes.ASM7, classVisitor);
         this.gameEngineType = gameEngineType;
     }
@@ -67,12 +67,6 @@ public class AppletToPanelAdapter extends ClassVisitor {
 
         @Override
         public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
-            // TODO move this to a mixin
-            // Set awt clipboard
-            if (owner.equals("client") && name.equals("w") && opcode == Opcodes.INVOKEVIRTUAL) {
-                super.visitInsn(Opcodes.POP2);
-                return;
-            }
             if (owner.equals(APPLET_TYPE.getInternalName()) && name.equals("<init>")) {
                 owner = PANEL_TYPE.getInternalName();
             } else if (owner.equals("netscape/javascript/JSObject") && name.equals("getWindow")) {

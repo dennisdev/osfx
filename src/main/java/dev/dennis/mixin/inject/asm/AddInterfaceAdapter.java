@@ -4,20 +4,18 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import java.util.Arrays;
-
 public class AddInterfaceAdapter extends ClassVisitor {
     private final Type interfaceType;
 
-    public AddInterfaceAdapter(String interfaceName, ClassVisitor classVisitor) {
-        this(Type.getObjectType(interfaceName), classVisitor);
+    public AddInterfaceAdapter(ClassVisitor classVisitor, String interfaceName) {
+        this(classVisitor, Type.getObjectType(interfaceName));
     }
 
-    public AddInterfaceAdapter(Class<?> interfaceClass, ClassVisitor classVisitor) {
-        this(Type.getType(interfaceClass), classVisitor);
+    public AddInterfaceAdapter(ClassVisitor classVisitor, Class<?> interfaceClass) {
+        this(classVisitor, Type.getType(interfaceClass));
     }
 
-    public AddInterfaceAdapter(Type interfaceType, ClassVisitor classVisitor) {
+    public AddInterfaceAdapter(ClassVisitor classVisitor, Type interfaceType) {
         super(Opcodes.ASM7, classVisitor);
         this.interfaceType = interfaceType;
     }

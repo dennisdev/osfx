@@ -19,10 +19,6 @@ public abstract class GameEngineMixin implements GameEngine {
     @Setter
     private AppletStub stub;
 
-    @Getter("canvas")
-    @Override
-    public abstract Canvas getCanvas();
-
     public String getParameter(String key) {
         return stub.getParameter(key);
     }
@@ -49,4 +45,15 @@ public abstract class GameEngineMixin implements GameEngine {
 
     @Copy("setupClipboard")
     public abstract void rs$setupClipboard();
+
+    @Replace("setupClipboard")
+    public void hd$setupClipboard() {
+        if (!GraphicsEnvironment.isHeadless()) {
+            rs$setupClipboard();
+        }
+    }
+
+    @Getter("canvas")
+    @Override
+    public abstract Canvas getCanvas();
 }

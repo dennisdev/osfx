@@ -22,7 +22,7 @@ public class AddGetterAdapter extends ClassVisitor {
 
     private String owner;
 
-    public AddGetterAdapter(String getterName, String getterDesc, FieldHook fieldHook, ClassVisitor classVisitor) {
+    public AddGetterAdapter(ClassVisitor classVisitor, String getterName, String getterDesc, FieldHook fieldHook) {
         super(Opcodes.ASM7, classVisitor);
         this.getterName = getterName;
         this.getterDesc = getterDesc;
@@ -56,7 +56,7 @@ public class AddGetterAdapter extends ClassVisitor {
         genAdapter.loadThis();
         genAdapter.getField(Type.getObjectType(owner), fieldName, Type.getObjectType(fieldDesc));
         genAdapter.returnValue();
-        genAdapter.visitMaxs(1, 0);
+        genAdapter.visitMaxs(0, 0);
         genAdapter.visitEnd();
 
         super.visitEnd();

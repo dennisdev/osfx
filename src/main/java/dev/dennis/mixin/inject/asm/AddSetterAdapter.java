@@ -19,8 +19,8 @@ public class AddSetterAdapter extends ClassVisitor {
 
     private String owner;
 
-    public AddSetterAdapter(String setterName, String fieldName, String fieldDesc,
-                            Number fieldMultiplier, ClassVisitor classVisitor) {
+    public AddSetterAdapter(ClassVisitor classVisitor, String setterName, String fieldName, String fieldDesc,
+                            Number fieldMultiplier) {
         super(Opcodes.ASM7, classVisitor);
         this.setterName = setterName;
         this.fieldName = fieldName;
@@ -40,14 +40,14 @@ public class AddSetterAdapter extends ClassVisitor {
         MethodVisitor mv = visitMethod(ACCESS, setterName, setterDesc, null, null);
 
 
-        GeneratorAdapter genAdapter = new GeneratorAdapter(mv, ACCESS, setterName, setterDesc);
+        GeneratorAdapter gen = new GeneratorAdapter(mv, ACCESS, setterName, setterDesc);
 
-        genAdapter.loadThis();
-        genAdapter.loadArg(0);
-        genAdapter.putField(Type.getObjectType(owner), fieldName, Type.getObjectType(fieldDesc));
-        genAdapter.returnValue();
-        genAdapter.visitMaxs(2, 1);
-        genAdapter.visitEnd();
+        gen.loadThis();
+        gen.loadArg(0);
+        gen.putField(Type.getObjectType(owner), fieldName, Type.getObjectType(fieldDesc));
+        gen.returnValue();
+        gen.visitMaxs(0, 0);
+        gen.visitEnd();
 
         super.visitEnd();
     }

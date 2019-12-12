@@ -10,20 +10,20 @@ import org.objectweb.asm.commons.Method;
 public class AddInjectCallbackAdapter extends ClassVisitor {
     private final java.lang.reflect.Method method;
 
-    private final String targetMethodName;
+    private final String targetName;
 
-    private final String targetMethodDesc;
+    private final String targetDesc;
 
     private final boolean end;
 
     private String owner;
 
-    public AddInjectCallbackAdapter(java.lang.reflect.Method method, String targetMethodName, String targetMethodDesc,
-                                    boolean end, ClassVisitor classVisitor) {
+    public AddInjectCallbackAdapter(ClassVisitor classVisitor, java.lang.reflect.Method method, String targetName,
+                                    String targetDesc, boolean end) {
         super(Opcodes.ASM7, classVisitor);
         this.method = method;
-        this.targetMethodName = targetMethodName;
-        this.targetMethodDesc = targetMethodDesc;
+        this.targetName = targetName;
+        this.targetDesc = targetDesc;
         this.end = end;
     }
 
@@ -37,7 +37,7 @@ public class AddInjectCallbackAdapter extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
                                      String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-        if (name.equals(targetMethodName) && descriptor.equals(targetMethodDesc)) {
+        if (name.equals(targetName) && descriptor.equals(targetDesc)) {
             return new AddCallbackMethodAdapter(mv, access, name, descriptor);
         } else {
             return mv;

@@ -20,8 +20,7 @@ public class AddMethodsAdapter extends ClassVisitor {
 
     private final List<Method> methods;
 
-    public AddMethodsAdapter(Hooks hooks, Class<?> mixinClass, List<Method> methods,
-                             ClassVisitor classVisitor) {
+    public AddMethodsAdapter(ClassVisitor classVisitor, Hooks hooks, Class<?> mixinClass, List<Method> methods) {
         super(Opcodes.ASM7, classVisitor);
         this.hooks = hooks;
         this.mixinClass = mixinClass;
@@ -133,6 +132,7 @@ public class AddMethodsAdapter extends ClassVisitor {
                     if (methodHook == null) {
                         throw new IllegalStateException("No method hook found for " + mixin.value() + "." + hookName);
                     }
+                    owner = classHook.getName();
                     descriptor = methodHook.getDesc();
                     if (methodHook.getDummyValue() != null) {
                         push(methodHook.getDummyValue());
