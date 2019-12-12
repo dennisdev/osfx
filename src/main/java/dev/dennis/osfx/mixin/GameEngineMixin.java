@@ -8,6 +8,7 @@ import dev.dennis.osfx.api.GameEngine;
 import java.applet.AppletContext;
 import java.applet.AppletStub;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
 import java.net.URL;
 
 @Mixin("GameEngine")
@@ -56,4 +57,8 @@ public abstract class GameEngineMixin implements GameEngine {
     @Getter("canvas")
     @Override
     public abstract Canvas getCanvas();
+
+    @Getter("clipboard")
+    @Override
+    public abstract Clipboard getClipboard();
 }

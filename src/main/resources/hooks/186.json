@@ -23,6 +23,10 @@
         "canvas": {
           "name": "aw",
           "desc": "java/awt/Canvas"
+        },
+        "clipboard": {
+          "name": "ae",
+          "desc": "java/awt/datatransfer/Clipboard"
         }
       },
       "methods": {
