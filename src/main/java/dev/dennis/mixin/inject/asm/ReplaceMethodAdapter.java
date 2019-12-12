@@ -60,6 +60,10 @@ public class ReplaceMethodAdapter extends ClassVisitor {
 
             gen.visitCode();
             gen.loadThis();
+            int argCount = Type.getArgumentTypes(targetDesc).length;
+            for (int i = 0; i < argCount; i++) {
+                gen.loadArg(i);
+            }
             gen.invokeVirtual(Type.getObjectType(targetOwner), new Method(targetName, targetDesc));
             gen.returnValue();
 
