@@ -178,7 +178,7 @@ public class Renderer implements Callbacks {
 
             BGFXTextureInfo textureInfo = BGFXTextureInfo.mallocStack(stack);
             bgfx_calc_texture_size(textureInfo, MAX_WIDTH, MAX_HEIGHT, 1, false, false,
-                    1, BGFX_TEXTURE_FORMAT_RGB8);
+                    1, BGFX_TEXTURE_FORMAT_BGRA8);
             IntBuffer textureData = MemoryUtil.memAllocInt(textureInfo.storageSize() / 4);
 
             short program = createProgram("vs_quad", "fs_quad");
