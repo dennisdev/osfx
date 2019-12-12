@@ -22,6 +22,7 @@ public class InjectorTest {
         injector.loadMixin(MainBufferProviderMixin.class);
         injector.loadMixin(TimerMixin.class);
         injector.loadMixin(NanoTimerMixin.class);
+        injector.loadMixin(ModelMixin.class);
 
         long start = System.currentTimeMillis();
         injector.inject(Paths.get(version + ".jar"), Paths.get(version + "_injected.jar"));

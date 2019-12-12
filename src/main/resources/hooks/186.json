@@ -87,6 +87,20 @@
           "dummyValue": 6
         }
       }
+    },
+    "Model": {
+      "name": "df",
+      "fields": {},
+      "methods": {
+        "draw": {
+          "name": "ch",
+          "desc": "(IIIIIIIIJ)V"
+        },
+        "drawFrustum": {
+          "name": "v",
+          "desc": "(IIIIIII)V"
+        }
+      }
     }
   }
 }
