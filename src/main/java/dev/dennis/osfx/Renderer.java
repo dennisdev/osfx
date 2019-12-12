@@ -475,7 +475,6 @@ public class Renderer implements Callbacks {
     }
 
     private void onKeyInput(long window, int key, int scanCode, int action, int mods) {
-        System.out.println(key + ", " + scanCode + ", " + action + ", " + mods);
         Canvas canvas = client.getCanvas();
         if (canvas != null) {
             key = KeyMapping.mapGlfwKeyToJava(key);
