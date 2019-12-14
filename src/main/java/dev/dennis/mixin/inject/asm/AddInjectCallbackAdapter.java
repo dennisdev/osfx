@@ -8,22 +8,25 @@ import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.Method;
 
 public class AddInjectCallbackAdapter extends ClassVisitor {
-    private final java.lang.reflect.Method method;
-
     private final String targetName;
 
     private final String targetDesc;
+
+    private final String callbackName;
+
+    private final String callbackDesc;
 
     private final boolean end;
 
     private String owner;
 
-    public AddInjectCallbackAdapter(ClassVisitor classVisitor, java.lang.reflect.Method method, String targetName,
-                                    String targetDesc, boolean end) {
+    public AddInjectCallbackAdapter(ClassVisitor classVisitor, String targetName, String targetDesc,
+                                    String callbackName, String callbackDesc, boolean end) {
         super(Opcodes.ASM7, classVisitor);
-        this.method = method;
         this.targetName = targetName;
         this.targetDesc = targetDesc;
+        this.callbackName = callbackName;
+        this.callbackDesc = callbackDesc;
         this.end = end;
     }
 
@@ -37,7 +40,7 @@ public class AddInjectCallbackAdapter extends ClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String descriptor, String signature,
                                      String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-        if (name.equals(targetName) && descriptor.equals(targetDesc)) {
+        if (name.equals(targetName) && (targetDesc == null || descriptor.equals(targetDesc))) {
             return new AddCallbackMethodAdapter(mv, access, name, descriptor);
         } else {
             return mv;
@@ -51,7 +54,7 @@ public class AddInjectCallbackAdapter extends ClassVisitor {
 
         private void invokeCallback() {
             loadThis();
-            invokeVirtual(Type.getObjectType(owner), Method.getMethod(method));
+            invokeVirtual(Type.getObjectType(owner), new Method(callbackName, callbackDesc));
         }
 
         @Override
@@ -63,7 +66,7 @@ public class AddInjectCallbackAdapter extends ClassVisitor {
 
         @Override
         protected void onMethodExit(int opcode) {
-            if (end) {
+            if (end && opcode != Opcodes.ATHROW) {
                 invokeCallback();
             }
         }

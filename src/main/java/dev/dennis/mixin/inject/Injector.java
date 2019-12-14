@@ -23,6 +23,8 @@ import java.util.jar.Manifest;
 public class Injector {
     private static final String GAME_ENGINE_HOOK_NAME = "GameEngine";
 
+    private static final String CONSTRUCTOR_NAME = "<init>";
+
     private final Hooks hooks;
 
     private final AdapterGroup preCopyAdapterGroup;
@@ -215,13 +217,19 @@ public class Injector {
         if (isStatic) {
             throw new NotImplementedException();
         }
-        MethodHook methodHook = classHook.getMethod(inject.value());
+        String hookName = inject.value();
+        MethodHook methodHook;
+        if (hookName.equals(CONSTRUCTOR_NAME)) {
+            methodHook = new MethodHook(CONSTRUCTOR_NAME, null);
+        } else {
+            methodHook = classHook.getMethod(hookName);
+        }
         if (methodHook == null) {
-            throw new IllegalStateException("No method hook found for " + mixin.value() + "." + inject.value());
+            throw new IllegalStateException("No method hook found for " + mixin.value() + "." + hookName);
         }
         preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
-                new AddInjectCallbackAdapter(delegate, method, methodHook.getName(), methodHook.getDesc(),
-                        inject.end()));
+                new AddInjectCallbackAdapter(delegate, methodHook.getName(), methodHook.getDesc(),
+                        method.getName(), Type.getMethodDescriptor(method), inject.end()));
     }
 
     public void inject(Path jarPath, Path outputPath) throws IOException {
