@@ -102,6 +102,8 @@ public class Injector {
                 addGetterAdapter(mixin, classHook, method);
             } else if (method.isAnnotationPresent(Setter.class)) {
                 addSetterAdapter(mixin, classHook, method);
+            } else if (method.isAnnotationPresent(Invoke.class)) {
+                addInvokeAdapter(mixin, classHook, method);
             } else if (method.isAnnotationPresent(Inject.class)) {
                 addInjectCallbackAdapter(mixin, classHook, method);
             } else if (method.isAnnotationPresent(Copy.class)) {
@@ -186,6 +188,7 @@ public class Injector {
                     new AddGetterAdapter(delegate, method.getName(), methodDesc, fieldHook));
         }
     }
+
     private void addSetterAdapter(Mixin mixin, ClassHook classHook, Method method) {
         if (!Modifier.isAbstract(method.getModifiers())) {
             throw new IllegalStateException("Setter method " + mixin.value() + "." + method.getName()
@@ -208,6 +211,32 @@ public class Injector {
             preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
                     new AddSetterAdapter(delegate, method.getName(), fieldHook.getName(), fieldHook.getDesc(),
                             fieldHook.getMultiplier()));
+        }
+    }
+
+    private void addInvokeAdapter(Mixin mixin, ClassHook classHook, Method method) {
+        if (!Modifier.isAbstract(method.getModifiers())) {
+            throw new IllegalStateException("Invoke method " + mixin.value() + "." + method.getName()
+                    + " must be abstract");
+        }
+        Invoke invoke = method.getAnnotation(Invoke.class);
+        boolean isStatic = method.isAnnotationPresent(Static.class);
+        if (isStatic) {
+            StaticMethodHook methodHook = hooks.getStaticMethod(invoke.value());
+            if (methodHook == null) {
+                throw new IllegalStateException("No static method hook found for " + invoke.value());
+            }
+            throw new NotImplementedException();
+        } else {
+            MethodHook methodHook = classHook.getMethod(invoke.value());
+            if (methodHook == null) {
+                throw new IllegalStateException("No method hook found for " + mixin.value() + "."
+                        + invoke.value());
+            }
+            preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
+                    new AddInvokeAdapter(delegate, method.getName(), Type.getMethodDescriptor(method),
+                            classHook.getName(), methodHook.getName(), methodHook.getDesc(),
+                            methodHook.getDummyValue()));
         }
     }
 
