@@ -60,7 +60,13 @@
           "desc": "[I"
         }
       },
-      "methods": {}
+      "methods": {
+        "setRaster": {
+          "name": "t",
+          "desc": "(S)V",
+          "dummyValue": -30907
+        }
+      }
     },
     "MainBufferProvider": {
       "name": "bi",
