@@ -121,21 +121,20 @@ public class AddMethodsAdapter extends ClassVisitor {
                         break;
                     }
                 }
-                if (method == null) {
-                    throw new IllegalStateException("Could not find mixin method");
-                }
-                String hookName = null;
-                if (method.isAnnotationPresent(Copy.class)) {
-                    hookName = method.getAnnotation(Copy.class).value();
-                }
-                if (hookName != null) {
-                    MethodHook methodHook = classHook.getMethod(hookName);
-                    if (methodHook == null) {
-                        throw new IllegalStateException("No method hook found for " + mixin.value() + "." + hookName);
+                if (method != null) {
+                    String hookName = null;
+                    if (method.isAnnotationPresent(Copy.class)) {
+                        hookName = method.getAnnotation(Copy.class).value();
                     }
-                    descriptor = methodHook.getDesc();
-                    if (methodHook.getDummyValue() != null) {
-                        push(methodHook.getDummyValue());
+                    if (hookName != null) {
+                        MethodHook methodHook = classHook.getMethod(hookName);
+                        if (methodHook == null) {
+                            throw new IllegalStateException("No method hook found for " + mixin.value() + "." + hookName);
+                        }
+                        descriptor = methodHook.getDesc();
+                        if (methodHook.getDummyValue() != null) {
+                            push(methodHook.getDummyValue());
+                        }
                     }
                 }
             }
