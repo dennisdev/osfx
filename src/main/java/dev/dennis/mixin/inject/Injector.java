@@ -98,6 +98,8 @@ public class Injector {
         for (Method method : mixinClass.getDeclaredMethods()) {
             if (method.isAnnotationPresent(Getter.class)) {
                 addGetterAdapter(mixin, classHook, method);
+            } else if (method.isAnnotationPresent(Setter.class)) {
+                addSetterAdapter(mixin, classHook, method);
             } else if (method.isAnnotationPresent(Inject.class)) {
                 addInjectCallbackAdapter(mixin, classHook, method);
             } else if (method.isAnnotationPresent(Copy.class)) {
@@ -180,6 +182,30 @@ public class Injector {
             }
             preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
                     new AddGetterAdapter(delegate, method.getName(), methodDesc, fieldHook));
+        }
+    }
+    private void addSetterAdapter(Mixin mixin, ClassHook classHook, Method method) {
+        if (!Modifier.isAbstract(method.getModifiers())) {
+            throw new IllegalStateException("Setter method " + mixin.value() + "." + method.getName()
+                    + " must be abstract");
+        }
+        Setter setter = method.getAnnotation(Setter.class);
+        boolean isStatic = method.isAnnotationPresent(Static.class);
+        if (isStatic) {
+            StaticFieldHook fieldHook = hooks.getStaticField(setter.value());
+            if (fieldHook == null) {
+                throw new IllegalStateException("No static field hook found for " + setter.value());
+            }
+            throw new NotImplementedException();
+        } else {
+            FieldHook fieldHook = classHook.getField(setter.value());
+            if (fieldHook == null) {
+                throw new IllegalStateException("No field hook found for " + mixin.value() + "."
+                        + setter.value());
+            }
+            preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
+                    new AddSetterAdapter(delegate, method.getName(), fieldHook.getName(), fieldHook.getDesc(),
+                            fieldHook.getMultiplier()));
         }
     }
 
