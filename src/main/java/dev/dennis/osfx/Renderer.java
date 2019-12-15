@@ -194,14 +194,13 @@ public class Renderer implements Callbacks {
 
             // shouldClose && client not crashed
             while (!glfwWindowShouldClose(window)) {
+                sync();
+
+                // start of frame
                 glfwPollEvents();
 
                 bgfx_set_view_rect(0, 0, 0, width, height);
                 bgfx_dbg_text_clear(0, false);
-
-                sync();
-
-                glfwPollEvents();
 
                 sync();
 
@@ -238,11 +237,7 @@ public class Renderer implements Callbacks {
 
                 bgfx_encoder_end(encoder);
 
-                glfwPollEvents();
-
                 sync();
-
-                glfwPollEvents();
 
                 bgfx_touch(0);
 
@@ -282,7 +277,6 @@ public class Renderer implements Callbacks {
 
     @Override
     public void onFrameStart() {
-//        System.out.println("frame start: " + System.currentTimeMillis());
         sync();
     }
 
@@ -290,7 +284,6 @@ public class Renderer implements Callbacks {
     public void onFrameEnd() {
         sync();
         sync();
-//        System.out.println("frame end: " + System.currentTimeMillis());
     }
 
     private void sync() {
