@@ -68,7 +68,7 @@ public class Renderer implements Callbacks {
 
     private int lastMouseY;
 
-    private BGFXVertexDecl decl;
+    private BGFXVertexLayout layout;
 
     private static boolean isPointOnCanvas(Canvas canvas, int x, int y) {
         Point loc = canvas.getLocation();
@@ -186,7 +186,7 @@ public class Renderer implements Callbacks {
             Dimension lastCanvasSize = null;
             short textureId = -1;
 
-            decl = createVertexDecl(false, false, true);
+            layout = createVertexLayout(false, false, true);
 
             FloatBuffer orthoBuf = MemoryUtil.memAllocFloat(16);
             Matrix4f ortho = new Matrix4f();
@@ -229,14 +229,14 @@ public class Renderer implements Callbacks {
                 bgfx_update_texture_2d(textureId, 0, 0, 0, 0,
                         canvas.getWidth(), canvas.getHeight(), bgfx_make_ref(textureData), 0xFFFF);
 
-                long encoder = bgfx_begin();
+                long encoder = bgfx_encoder_begin(false);
 
                 bgfx_encoder_set_texture(encoder, 0, (short) 0, textureId, BGFX_SAMPLER_NONE);
 
                 renderScreenSpaceQuad(encoder, 0, program, canvasLoc.x, canvasLoc.y,
                         canvas.getWidth(), canvas.getHeight());
 
-                bgfx_end(encoder);
+                bgfx_encoder_end(encoder);
 
                 glfwPollEvents();
 
@@ -257,7 +257,7 @@ public class Renderer implements Callbacks {
             MemoryUtil.memFree(textureData);
             MemoryUtil.memFree(orthoBuf);
 
-            decl.free();
+            layout.free();
             bgfx_destroy_texture(textureId);
             bgfx_destroy_program(program);
 
@@ -343,7 +343,7 @@ public class Renderer implements Callbacks {
             BGFXTransientVertexBuffer tvb = BGFXTransientVertexBuffer.callocStack(stack);
             BGFXTransientIndexBuffer tib = BGFXTransientIndexBuffer.callocStack(stack);
 
-            if (bgfx_alloc_transient_buffers(tvb, decl, 4, tib, 6)) {
+            if (bgfx_alloc_transient_buffers(tvb, layout, 4, tib, 6)) {
                 ByteBuffer vertex = tvb.data();
 
                 float z = 0.0f;
@@ -394,7 +394,8 @@ public class Renderer implements Callbacks {
 
                 bgfx_encoder_set_state(encoder, BGFX_STATE_WRITE_RGB, 0);
 
-                bgfx_encoder_set_transient_vertex_buffer(encoder, 0, tvb, 0, 4);
+                bgfx_encoder_set_transient_vertex_buffer(encoder, 0, tvb, 0, 4,
+                        BGFX_INVALID_HANDLE);
                 bgfx_encoder_set_transient_index_buffer(encoder, tib, 0, 6);
 
                 bgfx_encoder_submit(encoder, view, program, 0, false);
@@ -402,12 +403,12 @@ public class Renderer implements Callbacks {
         }
     }
 
-    private BGFXVertexDecl createVertexDecl(boolean withNormals, boolean withColor, boolean withTexCoords) {
-        BGFXVertexDecl decl = BGFXVertexDecl.calloc();
+    private BGFXVertexLayout createVertexLayout(boolean withNormals, boolean withColor, boolean withTexCoords) {
+        BGFXVertexLayout layout = BGFXVertexLayout.calloc();
 
-        bgfx_vertex_decl_begin(decl, rendererType);
+        bgfx_vertex_layout_begin(layout, rendererType);
 
-        bgfx_vertex_decl_add(decl,
+        bgfx_vertex_layout_add(layout,
                 BGFX_ATTRIB_POSITION,
                 3,
                 BGFX_ATTRIB_TYPE_FLOAT,
@@ -415,7 +416,7 @@ public class Renderer implements Callbacks {
                 false);
 
         if (withNormals) {
-            bgfx_vertex_decl_add(decl,
+            bgfx_vertex_layout_add(layout,
                     BGFX_ATTRIB_NORMAL,
                     3,
                     BGFX_ATTRIB_TYPE_FLOAT,
@@ -424,7 +425,7 @@ public class Renderer implements Callbacks {
         }
 
         if (withColor) {
-            bgfx_vertex_decl_add(decl,
+            bgfx_vertex_layout_add(layout,
                     BGFX_ATTRIB_COLOR0,
                     4,
                     BGFX_ATTRIB_TYPE_UINT8,
@@ -433,7 +434,7 @@ public class Renderer implements Callbacks {
         }
 
         if (withTexCoords) {
-            bgfx_vertex_decl_add(decl,
+            bgfx_vertex_layout_add(layout,
                     BGFX_ATTRIB_TEXCOORD0,
                     2,
                     BGFX_ATTRIB_TYPE_FLOAT,
@@ -441,9 +442,9 @@ public class Renderer implements Callbacks {
                     false);
         }
 
-        bgfx_vertex_decl_end(decl);
+        bgfx_vertex_layout_end(layout);
 
-        return decl;
+        return layout;
     }
 
     private void setGlfwCallbacks() {
