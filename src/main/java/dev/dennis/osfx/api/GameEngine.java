@@ -26,4 +26,8 @@ public interface GameEngine extends Runnable, FocusListener, WindowListener {
     Canvas getCanvas();
 
     Clipboard getClipboard();
+
+    boolean isReplaceCanvasNextFrame();
+
+    void setReplaceCanvasNextFrame(boolean replace);
 }

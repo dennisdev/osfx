@@ -71,4 +71,12 @@ public abstract class GameEngineMixin implements GameEngine {
     @Getter("clipboard")
     @Override
     public abstract Clipboard getClipboard();
+
+    @Getter("replaceCanvasNextFrame")
+    @Override
+    public abstract boolean isReplaceCanvasNextFrame();
+
+    @Setter("replaceCanvasNextFrame")
+    @Override
+    public abstract void setReplaceCanvasNextFrame(boolean replace);
 }

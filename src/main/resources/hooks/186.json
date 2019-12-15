@@ -27,6 +27,10 @@
         "clipboard": {
           "name": "ae",
           "desc": "Ljava/awt/datatransfer/Clipboard;"
+        },
+        "replaceCanvasNextFrame": {
+          "name": "av",
+          "desc": "Z"
         }
       },
       "methods": {
