@@ -105,6 +105,10 @@
         "drawFrustum": {
           "name": "v",
           "desc": "(IIIIIII)V"
+        },
+        "drawOrtho": {
+          "name": "q",
+          "desc": "(IIIIIIII)V"
         }
       }
     }
