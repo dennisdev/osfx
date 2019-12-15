@@ -24,17 +24,12 @@ public class AddStaticGetterAdapter extends ClassVisitor {
 
     public AddStaticGetterAdapter(ClassVisitor classVisitor, String getterName, String getterDesc,
                                   StaticFieldHook fieldHook) {
-        super(Opcodes.ASM7, classVisitor);
-        this.getterName = getterName;
-        this.getterDesc = getterDesc;
-        this.fieldOwner = fieldHook.getOwner();
-        this.fieldName = fieldHook.getName();
-        this.fieldDesc = fieldHook.getDesc();
-        this.fieldMultiplier = fieldHook.getMultiplier();
+        this(classVisitor, getterName, getterDesc, fieldHook.getOwner(), fieldHook.getName(), fieldHook.getDesc(),
+                fieldHook.getMultiplier());
     }
 
-    public AddStaticGetterAdapter(String getterName, String getterDesc, String fieldOwner, String fieldName,
-                                  String fieldDesc, Number fieldMultiplier, ClassVisitor classVisitor) {
+    public AddStaticGetterAdapter(ClassVisitor classVisitor, String getterName, String getterDesc, String fieldOwner,
+                                  String fieldName, String fieldDesc, Number fieldMultiplier) {
         super(Opcodes.ASM7, classVisitor);
         this.getterName = getterName;
         this.getterDesc = getterDesc;
@@ -50,7 +45,7 @@ public class AddStaticGetterAdapter extends ClassVisitor {
 
         GeneratorAdapter gen = new GeneratorAdapter(mv, ACCESS, getterName, getterDesc);
 
-        gen.getStatic(Type.getObjectType(fieldOwner), fieldName, Type.getObjectType(fieldDesc));
+        gen.getStatic(Type.getObjectType(fieldOwner), fieldName, Type.getType(fieldDesc));
         gen.returnValue();
         gen.visitMaxs(0, 0);
         gen.visitEnd();

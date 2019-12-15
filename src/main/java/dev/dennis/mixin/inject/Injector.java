@@ -79,7 +79,7 @@ public class Injector {
                 }
                 preCopyAdapterGroup.addAdapter(obfClassName, delegate ->
                         new AddGetterAdapter(getterName, Type.getMethodDescriptor(fieldType),
-                                fieldName, fieldType.getInternalName(), null, delegate));
+                                fieldName, fieldType.getDescriptor(), null, delegate));
             }
             if (field.isAnnotationPresent(Setter.class)) {
                 Setter setter = field.getAnnotation(Setter.class);
@@ -89,8 +89,9 @@ public class Injector {
                 } else {
                     setterName = setter.value();
                 }
+                String setterDesc = Type.getMethodDescriptor(Type.VOID_TYPE, fieldType);
                 preCopyAdapterGroup.addAdapter(obfClassName, delegate ->
-                        new AddSetterAdapter(delegate, setterName, fieldName, fieldType.getInternalName(),
+                        new AddSetterAdapter(delegate, setterName, setterDesc, fieldName, fieldType.getDescriptor(),
                                 null));
             }
         }
@@ -209,8 +210,8 @@ public class Injector {
                         + setter.value());
             }
             preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
-                    new AddSetterAdapter(delegate, method.getName(), fieldHook.getName(), fieldHook.getDesc(),
-                            fieldHook.getMultiplier()));
+                    new AddSetterAdapter(delegate, method.getName(), Type.getMethodDescriptor(method),
+                            fieldHook.getName(), fieldHook.getDesc(), fieldHook.getMultiplier()));
         }
     }
 

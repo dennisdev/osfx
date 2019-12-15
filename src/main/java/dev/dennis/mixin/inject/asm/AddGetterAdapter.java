@@ -51,13 +51,13 @@ public class AddGetterAdapter extends ClassVisitor {
     public void visitEnd() {
         MethodVisitor mv = visitMethod(ACCESS, getterName, getterDesc, null, null);
 
-        GeneratorAdapter genAdapter = new GeneratorAdapter(mv, ACCESS, getterName, getterDesc);
+        GeneratorAdapter gen = new GeneratorAdapter(mv, ACCESS, getterName, getterDesc);
 
-        genAdapter.loadThis();
-        genAdapter.getField(Type.getObjectType(owner), fieldName, Type.getObjectType(fieldDesc));
-        genAdapter.returnValue();
-        genAdapter.visitMaxs(0, 0);
-        genAdapter.visitEnd();
+        gen.loadThis();
+        gen.getField(Type.getObjectType(owner), fieldName, Type.getType(fieldDesc));
+        gen.returnValue();
+        gen.visitMaxs(0, 0);
+        gen.visitEnd();
 
         super.visitEnd();
     }

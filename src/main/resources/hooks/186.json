@@ -4,12 +4,12 @@
       "client": {
         "owner": "aa",
         "name": "as",
-        "desc": "client"
+        "desc": "Lclient;"
       },
       "bufferProvider": {
         "owner": "gu",
         "name": "az",
-        "desc": "lp"
+        "desc": "Llp;"
       }
     },
     "methods": {
@@ -22,11 +22,11 @@
       "fields": {
         "canvas": {
           "name": "aw",
-          "desc": "java/awt/Canvas"
+          "desc": "Ljava/awt/Canvas;"
         },
         "clipboard": {
           "name": "ae",
-          "desc": "java/awt/datatransfer/Clipboard"
+          "desc": "Ljava/awt/datatransfer/Clipboard;"
         }
       },
       "methods": {
@@ -73,7 +73,7 @@
       "fields": {
         "image": {
           "name": "f",
-          "desc": "java/awt/Image"
+          "desc": "Ljava/awt/Image;"
         }
       },
       "methods": {}

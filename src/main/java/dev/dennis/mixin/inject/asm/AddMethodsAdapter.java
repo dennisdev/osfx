@@ -88,7 +88,7 @@ public class AddMethodsAdapter extends ClassVisitor {
                         }
                         owner = fieldHook.getOwner();
                         name = fieldHook.getName();
-                        descriptor = Type.getObjectType(fieldHook.getDesc()).getDescriptor();
+                        descriptor = Type.getType(fieldHook.getDesc()).getDescriptor();
                     } else {
                         FieldHook fieldHook = classHook.getField(fieldName);
                         if (fieldHook == null) {
@@ -96,7 +96,7 @@ public class AddMethodsAdapter extends ClassVisitor {
                         }
                         owner = classHook.getName();
                         name = fieldHook.getName();
-                        descriptor = Type.getObjectType(fieldHook.getDesc()).getDescriptor();
+                        descriptor = Type.getType(fieldHook.getDesc()).getDescriptor();
                     }
                 } else {
                     owner = classHook.getName();
