@@ -1,0 +1,120 @@
+{
+  "statics": {
+    "fields": {
+      "client": {
+        "owner": "gg",
+        "name": "am",
+        "desc": "Lclient;"
+      },
+      "bufferProvider": {
+        "owner": "ju",
+        "name": "ac",
+        "desc": "Llk;"
+      }
+    },
+    "methods": {
+
+    }
+  },
+  "classes": {
+    "GameEngine": {
+      "name": "bj",
+      "fields": {
+        "canvas": {
+          "name": "ah",
+          "desc": "Ljava/awt/Canvas;"
+        },
+        "clipboard": {
+          "name": "ae",
+          "desc": "Ljava/awt/datatransfer/Clipboard;"
+        },
+        "replaceCanvasNextFrame": {
+          "name": "az",
+          "desc": "Z"
+        }
+      },
+      "methods": {
+        "post": {
+          "name": "d",
+          "desc": "(Ljava/lang/Object;B)V",
+          "dummyValue": -24
+        },
+        "setupClipboard": {
+          "name": "o",
+          "desc": "(I)V",
+          "dummyValue": -2116975887
+        },
+        "setClipboardContents": {
+          "name": "l",
+          "desc": "(Ljava/lang/String;S)V",
+          "dummyValue": -9007
+        }
+      }
+    },
+    "Client": {
+      "name": "client",
+      "fields": {},
+      "methods": {}
+    },
+    "BufferProvider": {
+      "name": "lk",
+      "fields": {
+        "pixels": {
+          "name": "y",
+          "desc": "[I"
+        }
+      },
+      "methods": {
+        "setRaster": {
+          "name": "h",
+          "desc": "(I)V",
+          "dummyValue": 1390931728
+        }
+      }
+    },
+    "MainBufferProvider": {
+      "name": "ab",
+      "fields": {
+        "image": {
+          "name": "i",
+          "desc": "Ljava/awt/Image;"
+        }
+      },
+      "methods": {}
+    },
+    "Timer": {
+      "name": "fc",
+      "fields": {},
+      "methods": {}
+    },
+    "NanoTimer": {
+      "name": "fn",
+      "fields": {},
+      "methods": {
+        "sleep": {
+          "name": "i",
+          "desc": "(III)I",
+          "dummyValue": 670539248
+        }
+      }
+    },
+    "Model": {
+      "name": "dw",
+      "fields": {},
+      "methods": {
+        "draw": {
+          "name": "ch",
+          "desc": "(IIIIIIIIJ)V"
+        },
+        "drawFrustum": {
+          "name": "m",
+          "desc": "(IIIIIII)V"
+        },
+        "drawOrtho": {
+          "name": "aa",
+          "desc": "(IIIIIIII)V"
+        }
+      }
+    }
+  }
+}

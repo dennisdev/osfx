@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
-    private static final Path INJECTED_PATH = Paths.get("186_injected.jar");
+    private static final Path INJECTED_PATH = Paths.get("187_injected.jar");
 
     private static final boolean LOAD_NEW_CONFIG = false;
 
