@@ -137,7 +137,12 @@
     "Sprite": {
       "name": "ls",
       "fields": {},
-      "methods": {}
+      "methods": {
+        "draw": {
+          "name": "o",
+          "desc": "(II)V"
+        }
+      }
     }
   }
 }

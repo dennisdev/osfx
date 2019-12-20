@@ -2,6 +2,7 @@ package dev.dennis.osfx;
 
 import dev.dennis.osfx.api.BufferProvider;
 import dev.dennis.osfx.api.Client;
+import dev.dennis.osfx.api.Sprite;
 import dev.dennis.osfx.util.KeyMapping;
 import dev.dennis.osfx.util.OsrsAppletStub;
 import dev.dennis.osfx.util.OsrsConfig;
@@ -284,6 +285,11 @@ public class Renderer implements Callbacks {
     public void onFrameEnd() {
         sync();
         sync();
+    }
+
+    @Override
+    public boolean drawSprite(Sprite sprite, int x, int y) {
+        return false;
     }
 
     private void sync() {
