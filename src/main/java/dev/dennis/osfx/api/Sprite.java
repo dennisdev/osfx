@@ -8,4 +8,6 @@ public interface Sprite {
     int getHeight();
 
     int getOffsetX();
+
+    int getOffsetY();
 }

@@ -152,6 +152,10 @@
         "offsetX": {
           "name": "w",
           "desc": "I"
+        },
+        "offsetY": {
+          "name": "p",
+          "desc": "I"
         }
       },
       "methods": {

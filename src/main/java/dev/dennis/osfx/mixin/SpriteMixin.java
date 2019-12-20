@@ -37,4 +37,8 @@ public abstract class SpriteMixin implements Sprite {
     @Getter("offsetX")
     @Override
     public abstract int getOffsetX();
+
+    @Getter("offsetY")
+    @Override
+    public abstract int getOffsetY();
 }
