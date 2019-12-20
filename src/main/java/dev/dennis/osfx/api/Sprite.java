@@ -4,4 +4,6 @@ public interface Sprite {
     int[] getPixels();
 
     int getWidth();
+
+    int getHeight();
 }

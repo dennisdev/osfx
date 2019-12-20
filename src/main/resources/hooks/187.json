@@ -144,6 +144,10 @@
         "width": {
           "name": "i",
           "desc": "I"
+        },
+        "height": {
+          "name": "y",
+          "desc": "I"
         }
       },
       "methods": {

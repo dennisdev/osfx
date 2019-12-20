@@ -29,4 +29,8 @@ public abstract class SpriteMixin implements Sprite {
     @Getter("width")
     @Override
     public abstract int getWidth();
+
+    @Getter("height")
+    @Override
+    public abstract int getHeight();
 }
