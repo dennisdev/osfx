@@ -10,6 +10,12 @@
         "owner": "ju",
         "name": "ac",
         "desc": "Llk;"
+      },
+      "cameraPitch": {
+        "owner": "dz",
+        "name": "hb",
+        "desc": "I",
+        "multiplier": -1167251555
       }
     },
     "methods": {

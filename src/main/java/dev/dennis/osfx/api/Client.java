@@ -8,4 +8,6 @@ public interface Client extends GameEngine {
     void setCallbacks(Callbacks callbacks);
 
     BufferProvider getBufferProvider();
+
+    int getCameraPitch();
 }

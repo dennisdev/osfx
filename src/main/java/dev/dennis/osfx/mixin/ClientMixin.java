@@ -18,4 +18,9 @@ public abstract class ClientMixin implements Client {
     @Getter("bufferProvider")
     @Override
     public abstract BufferProvider getBufferProvider();
+
+    @Static
+    @Getter("cameraPitch")
+    @Override
+    public abstract int getCameraPitch();
 }
