@@ -16,13 +16,7 @@ public class InjectorTest {
         Hooks hooks = loadHooks(version);
 
         Injector injector = new Injector(hooks);
-        injector.loadMixin(GameEngineMixin.class);
-        injector.loadMixin(ClientMixin.class);
-        injector.loadMixin(BufferProviderMixin.class);
-        injector.loadMixin(MainBufferProviderMixin.class);
-        injector.loadMixin(TimerMixin.class);
-        injector.loadMixin(NanoTimerMixin.class);
-        injector.loadMixin(ModelMixin.class);
+        injector.loadMixins("dev.dennis.osfx.mixin");
 
         long start = System.currentTimeMillis();
         injector.inject(Paths.get(version + ".jar"), Paths.get(version + "_injected.jar"));

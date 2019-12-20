@@ -5,6 +5,7 @@ import dev.dennis.mixin.*;
 import dev.dennis.mixin.hook.*;
 import dev.dennis.mixin.inject.asm.*;
 import org.objectweb.asm.Type;
+import org.reflections.Reflections;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,10 +41,13 @@ public class Injector {
     }
 
     public void loadMixins(String packageName) {
-
+        Reflections reflections = new Reflections(packageName);
+        for (Class<?> mixinClass : reflections.getTypesAnnotatedWith(Mixin.class)) {
+            loadMixin(mixinClass);
+        }
     }
 
-    public void loadMixin(Class<?> mixinClass) throws IOException {
+    public void loadMixin(Class<?> mixinClass) {
         if (!mixinClass.isAnnotationPresent(Mixin.class)) {
             throw new IllegalArgumentException(mixinClass.getName() + " is not a Mixin Class");
         }
