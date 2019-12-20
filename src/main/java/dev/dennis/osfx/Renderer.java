@@ -106,65 +106,10 @@ public class Renderer implements Callbacks {
         startClient(config);
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            if (!glfwInit()) {
-                throw new RuntimeException("Failed to initialize GLFW");
-            }
-
-            // the client (renderer) API is managed by bgfx
-            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-            window = glfwCreateWindow(width, height, TITLE, NULL, NULL);
-
-            if (window == NULL) {
-                throw new RuntimeException("Error creating GLFW window");
-            }
-
-            glfwSetWindowSizeLimits(window, MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT);
-
-            setGlfwCallbacks();
-
-            BGFXPlatformData platformData = BGFXPlatformData.callocStack(stack);
-
-            switch (Platform.get()) {
-                case LINUX:
-                    platformData.ndt(GLFWNativeX11.glfwGetX11Display());
-                    platformData.nwh(GLFWNativeX11.glfwGetX11Window(window));
-                    break;
-                case MACOSX:
-                    platformData.ndt(NULL);
-                    platformData.nwh(GLFWNativeCocoa.glfwGetCocoaWindow(window));
-                    break;
-                case WINDOWS:
-                    platformData.ndt(NULL);
-                    platformData.nwh(GLFWNativeWin32.glfwGetWin32Window(window));
-                    break;
-            }
-
-            platformData.context(NULL);
-            platformData.backBuffer(NULL);
-            platformData.backBufferDS(NULL);
-
-            bgfx_set_platform_data(platformData);
-
-            BGFXInit init = BGFXInit.mallocStack(stack);
-            bgfx_init_ctor(init);
-            init.type(BGFX_RENDERER_TYPE_COUNT)
-                    .resolution(it -> it
-                            .reset(RESET)
-                            .width(width)
-                            .height(height));
-
-            if (!bgfx_init(init)) {
-                throw new RuntimeException("Failed to initialize BGFX");
-            }
+            initWindow();
+            initBgfx(stack);
 
             BGFXCaps caps = bgfx_get_caps();
-
-            rendererType = caps.rendererType();
-            String rendererName = bgfx_get_renderer_name(rendererType);
-            System.out.println("Using renderer: " + rendererName);
-
-            format = init.resolution().format();
 
             if (DEBUG) {
                 bgfx_set_debug(BGFX_DEBUG_TEXT | BGFX_DEBUG_STATS);
@@ -261,11 +206,7 @@ public class Renderer implements Callbacks {
 
             System.out.println("BGFX Shutdown");
 
-            glfwFreeCallbacks(window);
-            glfwDestroyWindow(window);
-            glfwTerminate();
-
-            System.out.println("GLFW Terminated");
+            destroyWindow();
 
             stopClient();
 
@@ -274,6 +215,78 @@ public class Renderer implements Callbacks {
             // For some reason the AWT thread keeps running which prevents this process from stopping
             System.exit(0);
         }
+    }
+
+    private void initWindow() {
+        if (!glfwInit()) {
+            throw new RuntimeException("Failed to initialize GLFW");
+        }
+
+        // the client (renderer) API is managed by bgfx
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+        window = glfwCreateWindow(width, height, TITLE, NULL, NULL);
+
+        if (window == NULL) {
+            throw new RuntimeException("Error creating GLFW window");
+        }
+
+        glfwSetWindowSizeLimits(window, MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT);
+
+        setGlfwCallbacks();
+    }
+
+    private void destroyWindow() {
+        glfwFreeCallbacks(window);
+        glfwDestroyWindow(window);
+        glfwTerminate();
+
+        System.out.println("GLFW Terminated");
+    }
+
+    private void initBgfx(MemoryStack stack) {
+        BGFXPlatformData platformData = BGFXPlatformData.callocStack(stack);
+
+        switch (Platform.get()) {
+            case LINUX:
+                platformData.ndt(GLFWNativeX11.glfwGetX11Display());
+                platformData.nwh(GLFWNativeX11.glfwGetX11Window(window));
+                break;
+            case MACOSX:
+                platformData.ndt(NULL);
+                platformData.nwh(GLFWNativeCocoa.glfwGetCocoaWindow(window));
+                break;
+            case WINDOWS:
+                platformData.ndt(NULL);
+                platformData.nwh(GLFWNativeWin32.glfwGetWin32Window(window));
+                break;
+        }
+
+        platformData.context(NULL);
+        platformData.backBuffer(NULL);
+        platformData.backBufferDS(NULL);
+
+        bgfx_set_platform_data(platformData);
+
+        BGFXInit init = BGFXInit.mallocStack(stack);
+        bgfx_init_ctor(init);
+        init.type(BGFX_RENDERER_TYPE_COUNT)
+                .resolution(it -> it
+                        .reset(RESET)
+                        .width(width)
+                        .height(height));
+
+        if (!bgfx_init(init)) {
+            throw new RuntimeException("Failed to initialize BGFX");
+        }
+
+        BGFXCaps caps = bgfx_get_caps();
+
+        rendererType = caps.rendererType();
+        String rendererName = bgfx_get_renderer_name(rendererType);
+        System.out.println("Using renderer: " + rendererName);
+
+        format = init.resolution().format();
     }
 
     @Override
