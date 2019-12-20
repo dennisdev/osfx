@@ -1,9 +1,6 @@
 package dev.dennis.osfx.mixin;
 
-import dev.dennis.mixin.Copy;
-import dev.dennis.mixin.Mixin;
-import dev.dennis.mixin.Replace;
-import dev.dennis.mixin.Shadow;
+import dev.dennis.mixin.*;
 import dev.dennis.osfx.Callbacks;
 import dev.dennis.osfx.api.Client;
 import dev.dennis.osfx.api.Sprite;
@@ -24,4 +21,8 @@ public abstract class SpriteMixin implements Sprite {
         }
         rs$draw(x, y);
     }
+
+    @Getter("pixels")
+    @Override
+    public abstract int[] getPixels();
 }

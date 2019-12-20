@@ -136,7 +136,12 @@
     },
     "Sprite": {
       "name": "ls",
-      "fields": {},
+      "fields": {
+        "pixels": {
+          "name": "f",
+          "desc": "[I"
+        }
+      },
       "methods": {
         "draw": {
           "name": "o",
