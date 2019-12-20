@@ -25,4 +25,8 @@ public abstract class SpriteMixin implements Sprite {
     @Getter("pixels")
     @Override
     public abstract int[] getPixels();
+
+    @Getter("width")
+    @Override
+    public abstract int getWidth();
 }

@@ -140,6 +140,10 @@
         "pixels": {
           "name": "f",
           "desc": "[I"
+        },
+        "width": {
+          "name": "i",
+          "desc": "I"
         }
       },
       "methods": {
