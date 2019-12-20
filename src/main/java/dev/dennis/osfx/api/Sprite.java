@@ -6,4 +6,6 @@ public interface Sprite {
     int getWidth();
 
     int getHeight();
+
+    int getOffsetX();
 }

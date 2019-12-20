@@ -148,6 +148,10 @@
         "height": {
           "name": "y",
           "desc": "I"
+        },
+        "offsetX": {
+          "name": "w",
+          "desc": "I"
         }
       },
       "methods": {
