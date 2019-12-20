@@ -53,8 +53,19 @@ public class AddGetterAdapter extends ClassVisitor {
 
         GeneratorAdapter gen = new GeneratorAdapter(mv, ACCESS, getterName, getterDesc);
 
+        Type fieldType = Type.getType(fieldDesc);
+
         gen.loadThis();
-        gen.getField(Type.getObjectType(owner), fieldName, Type.getType(fieldDesc));
+        gen.getField(Type.getObjectType(owner), fieldName, fieldType);
+        if (fieldMultiplier != null) {
+            if (fieldType.equals(Type.INT_TYPE)) {
+                gen.push(fieldMultiplier.intValue());
+                gen.visitInsn(Opcodes.IMUL);
+            } else if (fieldType.equals(Type.LONG_TYPE)) {
+                gen.push((Long) fieldMultiplier);
+                gen.visitInsn(Opcodes.LMUL);
+            }
+        }
         gen.returnValue();
         gen.visitMaxs(0, 0);
         gen.visitEnd();
