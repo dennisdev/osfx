@@ -69,6 +69,7 @@ public class Injector {
                 continue;
             }
             String fieldName = field.getName();
+            boolean isStatic = Modifier.isStatic(field.getModifiers());
             Type fieldType = Type.getType(field.getType());
             preCopyAdapterGroup.addAdapter(obfClassName, delegate -> new AddFieldAdapter(delegate, field.getModifiers(),
                     fieldName, fieldType.getDescriptor()));
@@ -81,8 +82,9 @@ public class Injector {
                     getterName = getter.value();
                 }
                 preCopyAdapterGroup.addAdapter(obfClassName, delegate ->
-                        new AddGetterAdapter(getterName, Type.getMethodDescriptor(fieldType),
-                                fieldName, fieldType.getDescriptor(), null, delegate));
+                        new AddGetterAdapter(delegate, getterName, Type.getMethodDescriptor(fieldType),
+                                isStatic, classHook.getName(), fieldName, fieldType.getDescriptor(),
+                                null));
             }
             if (field.isAnnotationPresent(Setter.class)) {
                 Setter setter = field.getAnnotation(Setter.class);
@@ -175,22 +177,33 @@ public class Injector {
         Getter getter = method.getAnnotation(Getter.class);
         boolean isStatic = method.isAnnotationPresent(Static.class);
         String methodDesc = Type.getMethodDescriptor(method);
+        String fieldOwner;
+        String fieldName;
+        String fieldDesc;
+        Number fieldMultiplier;
         if (isStatic) {
             StaticFieldHook fieldHook = hooks.getStaticField(getter.value());
             if (fieldHook == null) {
                 throw new IllegalStateException("No static field hook found for " + getter.value());
             }
-            preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
-                    new AddStaticGetterAdapter(delegate, method.getName(), methodDesc, fieldHook));
+            fieldOwner = fieldHook.getOwner();
+            fieldName = fieldHook.getName();
+            fieldDesc = fieldHook.getDesc();
+            fieldMultiplier = fieldHook.getMultiplier();
         } else {
             FieldHook fieldHook = classHook.getField(getter.value());
             if (fieldHook == null) {
                 throw new IllegalStateException("No field hook found for " + mixin.value() + "."
                         + getter.value());
             }
-            preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
-                    new AddGetterAdapter(delegate, method.getName(), methodDesc, fieldHook));
+            fieldOwner = classHook.getName();
+            fieldName = fieldHook.getName();
+            fieldDesc = fieldHook.getDesc();
+            fieldMultiplier = fieldHook.getMultiplier();
         }
+        preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
+                new AddGetterAdapter(delegate, method.getName(), methodDesc, isStatic,
+                        fieldOwner, fieldName, fieldDesc, fieldMultiplier));
     }
 
     private void addSetterAdapter(Mixin mixin, ClassHook classHook, Method method) {
