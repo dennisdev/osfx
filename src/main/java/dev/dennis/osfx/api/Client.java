@@ -12,4 +12,6 @@ public interface Client extends GameEngine {
     int getCameraPitch();
 
     int getCameraYaw();
+
+    int getCameraZoom();
 }

@@ -22,6 +22,12 @@
         "name": "hs",
         "desc": "I",
         "multiplier": 1779595595
+      },
+      "cameraZoom": {
+        "owner": "client",
+        "name": "rk",
+        "desc": "I",
+        "multiplier": -1174260245
       }
     },
     "methods": {

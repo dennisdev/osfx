@@ -28,4 +28,9 @@ public abstract class ClientMixin implements Client {
     @Getter("cameraYaw")
     @Override
     public abstract int getCameraYaw();
+
+    @Static
+    @Getter("cameraZoom")
+    @Override
+    public abstract int getCameraZoom();
 }
