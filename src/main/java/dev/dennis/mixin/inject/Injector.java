@@ -5,7 +5,6 @@ import dev.dennis.mixin.*;
 import dev.dennis.mixin.hook.*;
 import dev.dennis.mixin.inject.asm.*;
 import org.objectweb.asm.Type;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -128,7 +127,7 @@ public class Injector {
         Replace replace = method.getAnnotation(Replace.class);
         boolean isStatic = method.isAnnotationPresent(Static.class);
         if (isStatic) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         } else {
             MethodHook methodHook = classHook.getMethod(replace.value());
             if (methodHook == null) {
@@ -148,7 +147,7 @@ public class Injector {
         String name;
         String desc;
         if (isStatic) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         } else {
             MethodHook methodHook = classHook.getMethod(copy.value());
             if (methodHook == null) {
@@ -202,7 +201,7 @@ public class Injector {
             if (fieldHook == null) {
                 throw new IllegalStateException("No static field hook found for " + setter.value());
             }
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         } else {
             FieldHook fieldHook = classHook.getField(setter.value());
             if (fieldHook == null) {
@@ -227,7 +226,7 @@ public class Injector {
             if (methodHook == null) {
                 throw new IllegalStateException("No static method hook found for " + invoke.value());
             }
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         } else {
             MethodHook methodHook = classHook.getMethod(invoke.value());
             if (methodHook == null) {
@@ -245,7 +244,7 @@ public class Injector {
         Inject inject = method.getAnnotation(Inject.class);
         boolean isStatic = method.isAnnotationPresent(Static.class);
         if (isStatic) {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
         String hookName = inject.value();
         MethodHook methodHook;
