@@ -133,6 +133,11 @@
           "desc": "(IIIIIIII)V"
         }
       }
+    },
+    "Sprite": {
+      "name": "ls",
+      "fields": {},
+      "methods": {}
     }
   }
 }
