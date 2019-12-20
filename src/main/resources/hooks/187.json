@@ -16,6 +16,12 @@
         "name": "hb",
         "desc": "I",
         "multiplier": -1167251555
+      },
+      "cameraYaw": {
+        "owner": "j",
+        "name": "hs",
+        "desc": "I",
+        "multiplier": 1779595595
       }
     },
     "methods": {
