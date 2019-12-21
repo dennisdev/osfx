@@ -209,9 +209,11 @@ public class Renderer implements Callbacks {
                 for (DrawSpriteCommand command : drawSpriteCommands) {
                     int x = command.getX();
                     int y = command.getY();
+                    int spriteWidth = command.getSpriteWidth();
+                    int spriteHeight = command.getSpriteHeight();
                     int width = command.getWidth();
                     int height = command.getHeight();
-                    short texId = bgfx_create_texture_2d(width, height, false, 1,
+                    short texId = bgfx_create_texture_2d(spriteWidth, spriteHeight, false, 1,
                             BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, bgfx_make_ref(command.getPixelsBuf()));
                     texturesToRemove.add(texId);
 
@@ -343,6 +345,48 @@ public class Renderer implements Callbacks {
 
     @Override
     public boolean drawSprite(Sprite sprite, int x, int y) {
+        return drawSprite(sprite, x, y, sprite.getWidth(), sprite.getHeight());
+    }
+
+    @Override
+    public boolean drawSprite(Sprite sprite, int x, int y, int width, int height) {
+        if (width == 0 || height == 0) {
+            return true;
+        }
+        int spriteWidth = sprite.getWidth();
+        int spriteHeight = sprite.getHeight();
+
+        int offsetX = sprite.getOffsetX();
+        int offsetY = sprite.getOffsetY();
+
+        if (spriteWidth != width || spriteHeight != height) {
+            int scaledX = 0;
+            int scaledY = 0;
+            final int maxWidth = sprite.getMaxWidth();
+            final int maxHeight = sprite.getMaxHeight();
+            final int scaledWidth = (maxWidth << 16) / width;
+            final int scaledHeight = (maxHeight << 16) / height;
+            if (offsetX > 0) {
+                final int scaledOffsetX = ((offsetX << 16) + scaledWidth - 1) / scaledWidth;
+                x += scaledOffsetX;
+                scaledX += scaledOffsetX * scaledWidth - (offsetX << 16);
+            }
+            if (offsetY > 0) {
+                final int scaledOffsetY = ((offsetY << 16) + scaledHeight - 1) / scaledHeight;
+                y += scaledOffsetY;
+                scaledY += scaledOffsetY * scaledHeight - (offsetY << 16);
+            }
+            if (spriteWidth < maxWidth) {
+                width = ((spriteWidth << 16) - scaledX + scaledWidth - 1) / scaledWidth;
+            }
+            if (spriteHeight < maxHeight) {
+                height = ((spriteHeight << 16) - scaledY + scaledHeight - 1) / scaledHeight;
+            }
+        } else {
+            x += offsetX;
+            y += offsetY;
+        }
+
         int[] pixels = sprite.getPixels();
         for (int i = 0; i < pixels.length; i++) {
             if (pixels[i] != 0) {
@@ -352,9 +396,7 @@ public class Renderer implements Callbacks {
         IntBuffer pixelsBuf = MemoryUtil.memAllocInt(pixels.length);
         pixelsBuf.put(pixels);
         pixelsBuf.flip();
-        x += sprite.getOffsetX();
-        y += sprite.getOffsetY();
-        drawSpriteCommands.add(new DrawSpriteCommand(pixelsBuf, x, y, sprite.getWidth(), sprite.getHeight(),
+        drawSpriteCommands.add(new DrawSpriteCommand(pixelsBuf, spriteWidth, spriteHeight, x, y, width, height,
                 client.getScissorX(), client.getScissorY(), client.getScissorWidth(), client.getScissorHeight()));
         return true;
     }

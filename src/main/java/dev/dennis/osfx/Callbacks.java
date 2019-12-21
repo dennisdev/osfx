@@ -8,4 +8,6 @@ public interface Callbacks {
     void onFrameEnd();
 
     boolean drawSprite(Sprite sprite, int x, int y);
+
+    boolean drawSprite(Sprite sprite, int x, int y, int width, int height);
 }

@@ -5,6 +5,10 @@ import java.nio.IntBuffer;
 public class DrawSpriteCommand {
     private final IntBuffer pixelsBuf;
 
+    private final int spriteWidth;
+
+    private final int spriteHeight;
+
     private final int x;
 
     private final int y;
@@ -21,9 +25,11 @@ public class DrawSpriteCommand {
 
     private final int scissorHeight;
 
-    public DrawSpriteCommand(IntBuffer pixelsBuf, int x, int y, int width, int height,
-                             int scissorX, int scissorY, int scissorWidth, int scissorHeight) {
+    public DrawSpriteCommand(IntBuffer pixelsBuf, int spriteWidth, int spriteHeight, int x, int y,
+                             int width, int height, int scissorX, int scissorY, int scissorWidth, int scissorHeight) {
         this.pixelsBuf = pixelsBuf;
+        this.spriteWidth = spriteWidth;
+        this.spriteHeight = spriteHeight;
         this.x = x;
         this.y = y;
         this.width = width;
@@ -36,6 +42,14 @@ public class DrawSpriteCommand {
 
     public IntBuffer getPixelsBuf() {
         return pixelsBuf;
+    }
+
+    public int getSpriteWidth() {
+        return spriteWidth;
+    }
+
+    public int getSpriteHeight() {
+        return spriteHeight;
     }
 
     public int getX() {

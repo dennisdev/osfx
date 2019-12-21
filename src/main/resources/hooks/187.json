@@ -190,6 +190,10 @@
         "draw": {
           "name": "o",
           "desc": "(II)V"
+        },
+        "drawScaled": {
+          "name": "t",
+          "desc": "(IIII)V"
         }
       }
     }

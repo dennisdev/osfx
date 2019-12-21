@@ -22,6 +22,18 @@ public abstract class SpriteMixin implements Sprite {
         rs$draw(x, y);
     }
 
+    @Copy("drawScaled")
+    public abstract void rs$drawScaled(int x, int y, int width, int height);
+
+    @Replace("drawScaled")
+    public void hd$drawScaled(int x, int y, int width, int height) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawSprite(this, x, y, width, height)) {
+            return;
+        }
+        rs$drawScaled(x, y, width, height);
+    }
+
     @Getter("pixels")
     @Override
     public abstract int[] getPixels();
