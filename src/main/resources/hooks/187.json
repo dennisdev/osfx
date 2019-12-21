@@ -176,6 +176,14 @@
         "offsetY": {
           "name": "p",
           "desc": "I"
+        },
+        "maxWidth": {
+          "name": "b",
+          "desc": "I"
+        },
+        "maxHeight": {
+          "name": "e",
+          "desc": "I"
         }
       },
       "methods": {

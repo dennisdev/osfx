@@ -10,4 +10,8 @@ public interface Sprite {
     int getOffsetX();
 
     int getOffsetY();
+
+    int getMaxWidth();
+
+    int getMaxHeight();
 }
