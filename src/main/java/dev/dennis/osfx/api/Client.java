@@ -14,4 +14,16 @@ public interface Client extends GameEngine {
     int getCameraYaw();
 
     int getCameraZoom();
+
+    int getScissorX();
+
+    int getScissorY();
+
+    int getScissorEndX();
+
+    int getScissorEndY();
+
+    int getScissorWidth();
+
+    int getScissorHeight();
 }

@@ -28,6 +28,26 @@
         "name": "rk",
         "desc": "I",
         "multiplier": -1174260245
+      },
+      "scissorX": {
+        "owner": "lj",
+        "name": "ah",
+        "desc": "I"
+      },
+      "scissorY": {
+        "owner": "lj",
+        "name": "ak",
+        "desc": "I"
+      },
+      "scissorEndX": {
+        "owner": "lj",
+        "name": "aq",
+        "desc": "I"
+      },
+      "scissorEndY": {
+        "owner": "lj",
+        "name": "au",
+        "desc": "I"
       }
     },
     "methods": {
