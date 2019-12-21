@@ -19,9 +19,12 @@ import org.lwjgl.system.Platform;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CyclicBarrier;
 
 import static org.lwjgl.bgfx.BGFX.*;
@@ -55,6 +58,8 @@ public class Renderer implements Callbacks {
 
     private final CyclicBarrier barrier;
 
+    private final List<DrawSpriteCommand> drawSpriteCommands;
+
     private int width;
 
     private int height;
@@ -84,6 +89,7 @@ public class Renderer implements Callbacks {
     public Renderer(Client client, int width, int height) {
         this.client = client;
         this.barrier = new CyclicBarrier(2);
+        this.drawSpriteCommands = new ArrayList<>();
         this.width = width;
         this.height = height;
     }
@@ -137,6 +143,8 @@ public class Renderer implements Callbacks {
             FloatBuffer orthoBuf = MemoryUtil.memAllocFloat(16);
             Matrix4f ortho = new Matrix4f();
 
+            List<Buffer> buffersToRemove = new ArrayList<>();
+            List<Short> texturesToRemove = new ArrayList<>();
 
             // shouldClose && client not crashed
             while (!glfwWindowShouldClose(window)) {
@@ -147,6 +155,23 @@ public class Renderer implements Callbacks {
 
                 bgfx_set_view_rect(0, 0, 0, width, height);
                 bgfx_dbg_text_clear(0, false);
+
+                for (Buffer buf : buffersToRemove) {
+                    MemoryUtil.memFree(buf);
+                }
+                buffersToRemove.clear();
+
+                for (short texId : texturesToRemove) {
+                    bgfx_destroy_texture(texId);
+                }
+                texturesToRemove.clear();
+
+                for (DrawSpriteCommand command : drawSpriteCommands) {
+                    buffersToRemove.add(command.getPixelsBuf());
+                }
+                drawSpriteCommands.clear();
+
+                sync();
 
                 sync();
 
@@ -179,15 +204,28 @@ public class Renderer implements Callbacks {
                 bgfx_encoder_set_texture(encoder, 0, (short) 0, textureId, BGFX_SAMPLER_NONE);
 
                 renderScreenSpaceQuad(encoder, 0, program, canvasLoc.x, canvasLoc.y,
-                        canvas.getWidth(), canvas.getHeight());
+                        canvas.getWidth(), canvas.getHeight(), false);
+
+                for (DrawSpriteCommand command : drawSpriteCommands) {
+                    int x = command.getX();
+                    int y = command.getY();
+                    int width = command.getWidth();
+                    int height = command.getHeight();
+                    short texId = bgfx_create_texture_2d(width, height, false, 1,
+                            BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, bgfx_make_ref(command.getPixelsBuf()));
+                    texturesToRemove.add(texId);
+
+                    bgfx_encoder_set_texture(encoder, 0, (short) 0, texId, BGFX_SAMPLER_NONE);
+                    renderScreenSpaceQuad(encoder, 0, program, x, y, width, height, true);
+                }
 
                 bgfx_encoder_end(encoder);
-
-                sync();
 
                 bgfx_touch(0);
 
                 bgfx_frame(false);
+                sync();
+
             }
 
             // data is managed from main thread, and it's passed to renderer
@@ -292,6 +330,7 @@ public class Renderer implements Callbacks {
     @Override
     public void onFrameStart() {
         sync();
+        sync();
     }
 
     @Override
@@ -302,7 +341,18 @@ public class Renderer implements Callbacks {
 
     @Override
     public boolean drawSprite(Sprite sprite, int x, int y) {
-        return false;
+        int[] pixels = sprite.getPixels();
+        for (int i = 0; i < pixels.length; i++) {
+            if (pixels[i] != 0) {
+                pixels[i] |= 0xFF << 24;
+            }
+        }
+        IntBuffer pixelsBuf = MemoryUtil.memAllocInt(pixels.length);
+        pixelsBuf.put(pixels);
+        pixelsBuf.flip();
+        drawSpriteCommands.add(new DrawSpriteCommand(pixelsBuf, x + sprite.getOffsetX(), y + sprite.getOffsetY(),
+                sprite.getWidth(), sprite.getHeight()));
+        return true;
     }
 
     private void sync() {
@@ -350,7 +400,7 @@ public class Renderer implements Callbacks {
     }
 
     private void renderScreenSpaceQuad(long encoder, int view, short program, float x, float y,
-                                       float width, float height) {
+                                       float width, float height, boolean alpha) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             BGFXTransientVertexBuffer tvb = BGFXTransientVertexBuffer.callocStack(stack);
             BGFXTransientIndexBuffer tib = BGFXTransientIndexBuffer.callocStack(stack);
@@ -404,7 +454,8 @@ public class Renderer implements Callbacks {
                 indices.putShort((short) 2);
                 indices.flip();
 
-                bgfx_encoder_set_state(encoder, BGFX_STATE_WRITE_RGB, 0);
+                long state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | (alpha ? BGFX_STATE_BLEND_ALPHA : 0);
+                bgfx_encoder_set_state(encoder, state, 0);
 
                 bgfx_encoder_set_transient_vertex_buffer(encoder, 0, tvb, 0, 4,
                         BGFX_INVALID_HANDLE);
