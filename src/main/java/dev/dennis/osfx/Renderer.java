@@ -215,6 +215,8 @@ public class Renderer implements Callbacks {
                             BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, bgfx_make_ref(command.getPixelsBuf()));
                     texturesToRemove.add(texId);
 
+                    bgfx_encoder_set_scissor(encoder, command.getScissorX(), command.getScissorY(),
+                            command.getScissorWidth(), command.getScissorHeight());
                     bgfx_encoder_set_texture(encoder, 0, (short) 0, texId, BGFX_SAMPLER_NONE);
                     renderScreenSpaceQuad(encoder, 0, program, x, y, width, height, true);
                 }
@@ -350,8 +352,10 @@ public class Renderer implements Callbacks {
         IntBuffer pixelsBuf = MemoryUtil.memAllocInt(pixels.length);
         pixelsBuf.put(pixels);
         pixelsBuf.flip();
-        drawSpriteCommands.add(new DrawSpriteCommand(pixelsBuf, x + sprite.getOffsetX(), y + sprite.getOffsetY(),
-                sprite.getWidth(), sprite.getHeight()));
+        x += sprite.getOffsetX();
+        y += sprite.getOffsetY();
+        drawSpriteCommands.add(new DrawSpriteCommand(pixelsBuf, x, y, sprite.getWidth(), sprite.getHeight(),
+                client.getScissorX(), client.getScissorY(), client.getScissorWidth(), client.getScissorHeight()));
         return true;
     }
 

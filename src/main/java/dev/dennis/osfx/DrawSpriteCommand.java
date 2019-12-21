@@ -13,12 +13,25 @@ public class DrawSpriteCommand {
 
     private final int height;
 
-    public DrawSpriteCommand(IntBuffer pixelsBuf, int x, int y, int width, int height) {
+    private final int scissorX;
+
+    private final int scissorY;
+
+    private final int scissorWidth;
+
+    private final int scissorHeight;
+
+    public DrawSpriteCommand(IntBuffer pixelsBuf, int x, int y, int width, int height,
+                             int scissorX, int scissorY, int scissorWidth, int scissorHeight) {
         this.pixelsBuf = pixelsBuf;
         this.x = x;
         this.y = y;
         this.width = width;
         this.height = height;
+        this.scissorX = scissorX;
+        this.scissorY = scissorY;
+        this.scissorWidth = scissorWidth;
+        this.scissorHeight = scissorHeight;
     }
 
     public IntBuffer getPixelsBuf() {
@@ -39,5 +52,21 @@ public class DrawSpriteCommand {
 
     public int getHeight() {
         return height;
+    }
+
+    public int getScissorX() {
+        return scissorX;
+    }
+
+    public int getScissorY() {
+        return scissorY;
+    }
+
+    public int getScissorWidth() {
+        return scissorWidth;
+    }
+
+    public int getScissorHeight() {
+        return scissorHeight;
     }
 }
