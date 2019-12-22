@@ -1,9 +1,4 @@
-$input v_texcoord0
-
-/*
- * Copyright 2011-2019 Branimir Karadzic. All rights reserved.
- * License: https://github.com/bkaradzic/bgfx#license-bsd-2-clause
- */
+$input v_texcoord0, v_color0
 
 #include "bgfx_shader.sh"
 
@@ -11,5 +6,7 @@ SAMPLER2D(s_texColor, 0);
 
 void main()
 {
-	gl_FragColor = texture2D(s_texColor, v_texcoord0);
+	vec4 color = texture2D(s_texColor, v_texcoord0);
+	color *= v_color0;
+	gl_FragColor = color;
 }

@@ -9,5 +9,9 @@ public interface Callbacks {
 
     boolean drawSprite(Sprite sprite, int x, int y);
 
+    boolean drawSprite(Sprite sprite, int x, int y, int alpha);
+
     boolean drawSprite(Sprite sprite, int x, int y, int width, int height);
+
+    boolean drawSprite(Sprite sprite, int x, int y, int width, int height, int alpha);
 }

@@ -22,6 +22,18 @@ public abstract class SpriteMixin implements Sprite {
         rs$draw(x, y);
     }
 
+    @Copy("drawAlpha")
+    public abstract void rs$drawAlpha(int x, int y, int alpha);
+
+    @Replace("drawAlpha")
+    public void hd$draw(int x, int y, int alpha) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawSprite(this, x, y, alpha)) {
+            return;
+        }
+        rs$drawAlpha(x, y, alpha);
+    }
+
     @Copy("drawScaled")
     public abstract void rs$drawScaled(int x, int y, int width, int height);
 
@@ -32,6 +44,18 @@ public abstract class SpriteMixin implements Sprite {
             return;
         }
         rs$drawScaled(x, y, width, height);
+    }
+
+    @Copy("drawScaledAlpha")
+    public abstract void rs$drawScaledAlpha(int x, int y, int width, int height, int alpha);
+
+    @Replace("drawScaledAlpha")
+    public void hd$drawScaledAlpha(int x, int y, int width, int height, int alpha) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawSprite(this, x, y, width, height, alpha)) {
+            return;
+        }
+        rs$drawScaledAlpha(x, y, width, height, alpha);
     }
 
     @Getter("pixels")

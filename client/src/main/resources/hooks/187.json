@@ -191,9 +191,17 @@
           "name": "o",
           "desc": "(II)V"
         },
+        "drawAlpha": {
+          "name": "z",
+          "desc": "(III)V"
+        },
         "drawScaled": {
           "name": "t",
           "desc": "(IIII)V"
+        },
+        "drawScaledAlpha": {
+          "name": "m",
+          "desc": "(IIIII)V"
         }
       }
     }
