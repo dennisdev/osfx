@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>client</artifactId>
+    <name>OSFX Client</name>
 
     <properties>
         <joml.version>1.9.12</joml.version>
@@ -154,4 +155,39 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>dev.dennis.osfx</groupId>
+                <artifactId>shaderc-plugin</artifactId>
+                <version>${project.version}</version>
+                <configuration>
+                    <lwjglVersion>${lwjgl.version}</lwjglVersion>
+                    <inputDir>src/main/shaders/</inputDir>
+                    <outputDir>src/main/resources/shaders/</outputDir>
+                    <disassemble>true</disassemble>
+                    <dx9>true</dx9>
+                    <dx11>true</dx11>
+                    <glsl>true</glsl>
+                    <metal>true</metal>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>clean-shaders</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>compile-shaders</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

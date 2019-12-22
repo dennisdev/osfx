@@ -9,6 +9,8 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
 
+    <name>OSFX</name>
+
     <modules>
         <module>client</module>
         <module>shaderc-plugin</module>
@@ -48,5 +50,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
