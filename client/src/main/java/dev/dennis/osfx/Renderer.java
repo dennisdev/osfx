@@ -58,8 +58,6 @@ public class Renderer implements Callbacks {
 
     private final CyclicBarrier barrier;
 
-    private final List<DrawSpriteCommand> drawSpriteCommands;
-
     private int width;
 
     private int height;
@@ -70,11 +68,31 @@ public class Renderer implements Callbacks {
 
     private int format;
 
+    private BGFXCaps bgfxCaps;
+
     private int lastMouseX;
 
     private int lastMouseY;
 
+    private final List<Buffer> buffersToRemove;
+
+    private final List<Short> texturesToRemove;
+
+    private final List<DrawSpriteCommand> drawSpriteCommands;
+
+    private Dimension lastCanvasSize;
+
+    private IntBuffer fullscreenTextureBuf;
+
     private BGFXVertexLayout layout;
+
+    private short quadProgram;
+
+    private short fullscreenTextureId;
+
+    private FloatBuffer orthoBuf;
+
+    private final Matrix4f ortho;
 
     private static boolean isPointOnCanvas(Canvas canvas, int x, int y) {
         Point loc = canvas.getLocation();
@@ -89,9 +107,12 @@ public class Renderer implements Callbacks {
     public Renderer(Client client, int width, int height) {
         this.client = client;
         this.barrier = new CyclicBarrier(2);
-        this.drawSpriteCommands = new ArrayList<>();
         this.width = width;
         this.height = height;
+        this.buffersToRemove = new ArrayList<>();
+        this.texturesToRemove = new ArrayList<>();
+        this.drawSpriteCommands = new ArrayList<>();
+        this.ortho = new Matrix4f();
     }
 
     private void startClient(OsrsConfig config) {
@@ -108,130 +129,15 @@ public class Renderer implements Callbacks {
         client.destroy();
     }
 
-    public void start(OsrsConfig config) throws IOException {
+    public void start(OsrsConfig config) {
         startClient(config);
 
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            initWindow();
-            initBgfx(stack);
-
-            BGFXCaps caps = bgfx_get_caps();
-
-            if (DEBUG) {
-                bgfx_set_debug(BGFX_DEBUG_TEXT | BGFX_DEBUG_STATS);
-            }
-
-            bgfx_set_view_clear(0,
-                    BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
-                    0x000000FF,
-                    1.0f,
-                    0);
-
-
-            BGFXTextureInfo textureInfo = BGFXTextureInfo.mallocStack(stack);
-            bgfx_calc_texture_size(textureInfo, MAX_WIDTH, MAX_HEIGHT, 1, false, false,
-                    1, BGFX_TEXTURE_FORMAT_BGRA8);
-            IntBuffer textureData = MemoryUtil.memAllocInt(textureInfo.storageSize() / 4 + 1);
-
-            short program = createProgram("vs_quad", "fs_quad");
-
-            Dimension lastCanvasSize = null;
-            short textureId = -1;
-
-            layout = createVertexLayout(false, true, true);
-
-            FloatBuffer orthoBuf = MemoryUtil.memAllocFloat(16);
-            Matrix4f ortho = new Matrix4f();
-
-            List<Buffer> buffersToRemove = new ArrayList<>();
-            List<Short> texturesToRemove = new ArrayList<>();
+            init(stack);
 
             // shouldClose && client not crashed
             while (!glfwWindowShouldClose(window)) {
-                sync();
-
-                // start of frame
-                glfwPollEvents();
-
-                bgfx_set_view_rect(0, 0, 0, width, height);
-                bgfx_dbg_text_clear(0, false);
-
-                for (Buffer buf : buffersToRemove) {
-                    MemoryUtil.memFree(buf);
-                }
-                buffersToRemove.clear();
-
-                for (short texId : texturesToRemove) {
-                    bgfx_destroy_texture(texId);
-                }
-                texturesToRemove.clear();
-
-                for (DrawSpriteCommand command : drawSpriteCommands) {
-                    buffersToRemove.add(command.getPixelsBuf());
-                }
-                drawSpriteCommands.clear();
-
-                sync();
-
-                sync();
-
-                ortho.setOrthoLH(0.0f, width, height, 0.0f, 0.0f, 1.0f, !caps.homogeneousDepth());
-                ortho.get(orthoBuf);
-                bgfx_set_view_transform(0, null, orthoBuf);
-
-                Canvas canvas = client.getCanvas();
-                Point canvasLoc = canvas.getLocation();
-
-                BufferProvider bufferProvider = client.getBufferProvider();
-                int[] pixels = bufferProvider.getPixels();
-                textureData.clear();
-                textureData.put(pixels);
-                textureData.flip();
-
-                if (textureId == -1 || !canvas.getSize().equals(lastCanvasSize)) {
-                    if (textureId != -1) {
-                        bgfx_destroy_texture(textureId);
-                    }
-                    textureId = bgfx_create_texture_2d(canvas.getWidth(), canvas.getHeight(), false, 1,
-                            BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, null);
-                    lastCanvasSize = canvas.getSize();
-                }
-                bgfx_update_texture_2d(textureId, 0, 0, 0, 0,
-                        canvas.getWidth(), canvas.getHeight(), bgfx_make_ref(textureData), 0xFFFF);
-
-                long encoder = bgfx_encoder_begin(false);
-
-                bgfx_encoder_set_texture(encoder, 0, (short) 0, textureId, BGFX_SAMPLER_NONE);
-                bgfx_encoder_set_state(encoder, BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A, 0);
-                renderQuad(encoder, 0, program, canvasLoc.x, canvasLoc.y, canvas.getWidth(), canvas.getHeight(),
-                        0xFFFFFF, 255);
-
-                for (DrawSpriteCommand command : drawSpriteCommands) {
-                    int x = command.getX();
-                    int y = command.getY();
-                    int spriteWidth = command.getSpriteWidth();
-                    int spriteHeight = command.getSpriteHeight();
-                    int width = command.getWidth();
-                    int height = command.getHeight();
-                    short texId = bgfx_create_texture_2d(spriteWidth, spriteHeight, false, 1,
-                            BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, bgfx_make_ref(command.getPixelsBuf()));
-                    texturesToRemove.add(texId);
-
-                    bgfx_encoder_set_scissor(encoder, command.getScissorX(), command.getScissorY(),
-                            command.getScissorWidth(), command.getScissorHeight());
-                    bgfx_encoder_set_texture(encoder, 0, (short) 0, texId, BGFX_SAMPLER_NONE);
-                    long state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA;
-                    bgfx_encoder_set_state(encoder, state, 0);
-                    renderQuad(encoder, 0, program, x, y, width, height, 0xFFFFFF, command.getAlpha());
-                }
-
-                bgfx_encoder_end(encoder);
-
-                bgfx_touch(0);
-
-                bgfx_frame(false);
-                sync();
-
+                render();
             }
 
             // data is managed from main thread, and it's passed to renderer
@@ -239,26 +145,18 @@ public class Renderer implements Callbacks {
             // for the previous frame to finish before we can free it.
             bgfx_frame(false);
 
-            MemoryUtil.memFree(textureData);
-            MemoryUtil.memFree(orthoBuf);
-
-            layout.free();
-            bgfx_destroy_texture(textureId);
-            bgfx_destroy_program(program);
-
-            bgfx_shutdown();
-
-            System.out.println("BGFX Shutdown");
-
-            destroyWindow();
-
-            stopClient();
-
-            System.out.println("Destroyed");
+            destroy();
 
             // For some reason the AWT thread keeps running which prevents this process from stopping
+            // So we exit manually
             System.exit(0);
         }
+    }
+
+    private void init(MemoryStack stack) {
+        initWindow();
+        initBgfx(stack);
+        initRenderer(stack);
     }
 
     private void initWindow() {
@@ -278,14 +176,6 @@ public class Renderer implements Callbacks {
         glfwSetWindowSizeLimits(window, MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT);
 
         setGlfwCallbacks();
-    }
-
-    private void destroyWindow() {
-        glfwFreeCallbacks(window);
-        glfwDestroyWindow(window);
-        glfwTerminate();
-
-        System.out.println("GLFW Terminated");
     }
 
     private void initBgfx(MemoryStack stack) {
@@ -324,13 +214,167 @@ public class Renderer implements Callbacks {
             throw new RuntimeException("Failed to initialize BGFX");
         }
 
-        BGFXCaps caps = bgfx_get_caps();
+        bgfxCaps = bgfx_get_caps();
 
-        rendererType = caps.rendererType();
+        rendererType = bgfxCaps.rendererType();
         String rendererName = bgfx_get_renderer_name(rendererType);
         System.out.println("Using renderer: " + rendererName);
 
         format = init.resolution().format();
+    }
+
+    private void initRenderer(MemoryStack stack) {
+        if (DEBUG) {
+            bgfx_set_debug(BGFX_DEBUG_TEXT | BGFX_DEBUG_STATS);
+        }
+
+        bgfx_set_view_clear(0,
+                BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
+                0x000000FF,
+                1.0f,
+                0);
+
+        BGFXTextureInfo textureInfo = BGFXTextureInfo.mallocStack(stack);
+        bgfx_calc_texture_size(textureInfo, MAX_WIDTH, MAX_HEIGHT, 1, false, false,
+                1, BGFX_TEXTURE_FORMAT_BGRA8);
+        fullscreenTextureBuf = MemoryUtil.memAllocInt(textureInfo.storageSize() / 4 + 1);
+
+        quadProgram = createProgram("vs_quad", "fs_quad");
+
+        layout = createVertexLayout(false, true, true);
+
+        orthoBuf = MemoryUtil.memAllocFloat(16);
+    }
+
+    private void destroy() {
+        destroyBgfx();
+        destroyWindow();
+
+        stopClient();
+
+        System.out.println("Destroyed");
+    }
+
+    private void destroyWindow() {
+        glfwFreeCallbacks(window);
+        glfwDestroyWindow(window);
+        glfwTerminate();
+
+        System.out.println("GLFW Terminated");
+    }
+
+    private void destroyBgfx() {
+        MemoryUtil.memFree(fullscreenTextureBuf);
+        MemoryUtil.memFree(orthoBuf);
+
+        layout.free();
+
+        bgfx_destroy_texture(fullscreenTextureId);
+
+        bgfx_destroy_program(quadProgram);
+
+        bgfx_shutdown();
+
+        System.out.println("BGFX Shutdown");
+    }
+
+    private void render() {
+        sync();
+
+        // Start of frame
+        glfwPollEvents();
+
+        bgfx_set_view_rect(0, 0, 0, width, height);
+        bgfx_dbg_text_clear(0, false);
+
+        for (Buffer buf : buffersToRemove) {
+            MemoryUtil.memFree(buf);
+        }
+        buffersToRemove.clear();
+
+        for (short texId : texturesToRemove) {
+            bgfx_destroy_texture(texId);
+        }
+        texturesToRemove.clear();
+
+        for (DrawSpriteCommand command : drawSpriteCommands) {
+            buffersToRemove.add(command.getPixelsBuf());
+        }
+        drawSpriteCommands.clear();
+
+        sync();
+
+        // Client is drawing
+
+        sync();
+
+        // End of frame
+        ortho.setOrthoLH(0.0f, width, height, 0.0f, 0.0f, 1.0f, !bgfxCaps.homogeneousDepth());
+        ortho.get(orthoBuf);
+        bgfx_set_view_transform(0, null, orthoBuf);
+
+        long encoder = bgfx_encoder_begin(false);
+
+        renderFullscreenTexture(encoder);
+
+        for (DrawSpriteCommand command : drawSpriteCommands) {
+            int x = command.getX();
+            int y = command.getY();
+            int spriteWidth = command.getSpriteWidth();
+            int spriteHeight = command.getSpriteHeight();
+            int width = command.getWidth();
+            int height = command.getHeight();
+            short texId = bgfx_create_texture_2d(spriteWidth, spriteHeight, false, 1,
+                    BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, bgfx_make_ref(command.getPixelsBuf()));
+            texturesToRemove.add(texId);
+
+            bgfx_encoder_set_scissor(encoder, command.getScissorX(), command.getScissorY(),
+                    command.getScissorWidth(), command.getScissorHeight());
+            bgfx_encoder_set_texture(encoder, 0, (short) 0, texId, BGFX_SAMPLER_NONE);
+            long state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA;
+            bgfx_encoder_set_state(encoder, state, 0);
+            renderQuad(encoder, 0, quadProgram, x, y, width, height, 0xFFFFFF, command.getAlpha());
+        }
+
+        bgfx_encoder_end(encoder);
+
+        bgfx_touch(0);
+
+        bgfx_frame(false);
+        sync();
+    }
+
+    private void renderFullscreenTexture(long encoder) {
+        updateFullscreenTexture();
+
+        Canvas canvas = client.getCanvas();
+        Point canvasLoc = canvas.getLocation();
+
+        bgfx_encoder_set_texture(encoder, 0, (short) 0, fullscreenTextureId, BGFX_SAMPLER_NONE);
+        bgfx_encoder_set_state(encoder, BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A, 0);
+        renderQuad(encoder, 0, quadProgram, canvasLoc.x, canvasLoc.y, canvas.getWidth(), canvas.getHeight(),
+                0xFFFFFF, 255);
+    }
+
+    private void updateFullscreenTexture() {
+        Canvas canvas = client.getCanvas();
+
+        BufferProvider bufferProvider = client.getBufferProvider();
+        int[] pixels = bufferProvider.getPixels();
+        fullscreenTextureBuf.clear();
+        fullscreenTextureBuf.put(pixels);
+        fullscreenTextureBuf.flip();
+
+        if (fullscreenTextureId == -1 || !canvas.getSize().equals(lastCanvasSize)) {
+            if (fullscreenTextureId != -1) {
+                bgfx_destroy_texture(fullscreenTextureId);
+            }
+            fullscreenTextureId = bgfx_create_texture_2d(canvas.getWidth(), canvas.getHeight(), false, 1,
+                    BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, null);
+            lastCanvasSize = canvas.getSize();
+        }
+        bgfx_update_texture_2d(fullscreenTextureId, 0, 0, 0, 0,
+                canvas.getWidth(), canvas.getHeight(), bgfx_make_ref(fullscreenTextureBuf), 0xFFFF);
     }
 
     @Override
@@ -423,7 +467,7 @@ public class Renderer implements Callbacks {
         }
     }
 
-    private short createShader(String name) throws IOException {
+    private short createShader(String name) {
         String path = "shaders/";
         switch (rendererType) {
             case BGFX_RENDERER_TYPE_DIRECT3D9:
@@ -444,16 +488,19 @@ public class Renderer implements Callbacks {
             default:
                 throw new IllegalStateException("Unknown renderer type: " + rendererType);
         }
-        ByteBuffer shaderResource = ResourceUtil.loadResource(path, name + ".bin");
-        return bgfx_create_shader(bgfx_make_ref_release(shaderResource, releaseMemoryCb, 0L));
+        try {
+            ByteBuffer shaderResource = ResourceUtil.loadResource(path, name + ".bin");
+            return bgfx_create_shader(bgfx_make_ref_release(shaderResource, releaseMemoryCb, 0L));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed loading shader resource: " + path + "/" + name + ".bin", e);
+        }
     }
 
-    private short createProgram(String vertexShaderName, String fragmentShaderName) throws IOException {
+    private short createProgram(String vertexShaderName, String fragmentShaderName) {
         return createProgram(vertexShaderName, fragmentShaderName, true);
     }
 
-    private short createProgram(String vertexShaderName, String fragmentShaderName, boolean destroy)
-            throws IOException {
+    private short createProgram(String vertexShaderName, String fragmentShaderName, boolean destroy) {
         short vs = createShader(vertexShaderName);
         short fs = createShader(fragmentShaderName);
         return bgfx_create_program(vs, fs, destroy);
