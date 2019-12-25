@@ -211,6 +211,10 @@
         "glyphs": {
           "name": "f",
           "desc": "[[B"
+        },
+        "glyphWidths": {
+          "name": "y",
+          "desc": "[I"
         }
       },
       "methods": {}
