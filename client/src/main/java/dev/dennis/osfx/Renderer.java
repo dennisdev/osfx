@@ -3,6 +3,8 @@ package dev.dennis.osfx;
 import dev.dennis.osfx.api.BufferProvider;
 import dev.dennis.osfx.api.Client;
 import dev.dennis.osfx.api.Sprite;
+import dev.dennis.osfx.render.RenderCommand;
+import dev.dennis.osfx.render.RenderSpriteCommand;
 import dev.dennis.osfx.util.KeyMapping;
 import dev.dennis.osfx.util.OsrsAppletStub;
 import dev.dennis.osfx.util.OsrsConfig;
@@ -78,7 +80,7 @@ public class Renderer implements Callbacks {
 
     private final List<Short> texturesToRemove;
 
-    private final List<DrawSpriteCommand> drawSpriteCommands;
+    private final List<RenderCommand> renderCommands;
 
     private Dimension lastCanvasSize;
 
@@ -111,7 +113,7 @@ public class Renderer implements Callbacks {
         this.height = height;
         this.buffersToRemove = new ArrayList<>();
         this.texturesToRemove = new ArrayList<>();
-        this.drawSpriteCommands = new ArrayList<>();
+        this.renderCommands = new ArrayList<>();
         this.ortho = new Matrix4f();
     }
 
@@ -292,15 +294,15 @@ public class Renderer implements Callbacks {
         }
         buffersToRemove.clear();
 
-        for (short texId : texturesToRemove) {
-            bgfx_destroy_texture(texId);
+        for (short textureId : texturesToRemove) {
+            bgfx_destroy_texture(textureId);
         }
         texturesToRemove.clear();
 
-        for (DrawSpriteCommand command : drawSpriteCommands) {
-            buffersToRemove.add(command.getPixelsBuf());
+        for (RenderCommand command : renderCommands) {
+            command.cleanup(this);
         }
-        drawSpriteCommands.clear();
+        renderCommands.clear();
 
         sync();
 
@@ -317,23 +319,8 @@ public class Renderer implements Callbacks {
 
         renderFullscreenTexture(encoder);
 
-        for (DrawSpriteCommand command : drawSpriteCommands) {
-            int x = command.getX();
-            int y = command.getY();
-            int spriteWidth = command.getSpriteWidth();
-            int spriteHeight = command.getSpriteHeight();
-            int width = command.getWidth();
-            int height = command.getHeight();
-            short texId = bgfx_create_texture_2d(spriteWidth, spriteHeight, false, 1,
-                    BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, bgfx_make_ref(command.getPixelsBuf()));
-            texturesToRemove.add(texId);
-
-            bgfx_encoder_set_scissor(encoder, command.getScissorX(), command.getScissorY(),
-                    command.getScissorWidth(), command.getScissorHeight());
-            bgfx_encoder_set_texture(encoder, 0, (short) 0, texId, BGFX_SAMPLER_NONE);
-            long state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA;
-            bgfx_encoder_set_state(encoder, state, 0);
-            renderQuad(encoder, 0, quadProgram, x, y, width, height, 0xFFFFFF, command.getAlpha());
+        for (RenderCommand command : renderCommands) {
+            command.render(this, encoder);
         }
 
         bgfx_encoder_end(encoder);
@@ -454,7 +441,7 @@ public class Renderer implements Callbacks {
         IntBuffer pixelsBuf = MemoryUtil.memAllocInt(pixels.length);
         pixelsBuf.put(pixels);
         pixelsBuf.flip();
-        drawSpriteCommands.add(new DrawSpriteCommand(pixelsBuf, spriteWidth, spriteHeight, x, y, width, height, alpha,
+        renderCommands.add(new RenderSpriteCommand(pixelsBuf, spriteWidth, spriteHeight, x, y, width, height, alpha,
                 client.getScissorX(), client.getScissorY(), client.getScissorWidth(), client.getScissorHeight()));
         return true;
     }
@@ -506,7 +493,7 @@ public class Renderer implements Callbacks {
         return bgfx_create_program(vs, fs, destroy);
     }
 
-    private void renderQuad(long encoder, int view, short program, float x, float y,
+    public void renderQuad(long encoder, int view, short program, float x, float y,
                             float width, float height, int rgb, int alpha) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             BGFXTransientVertexBuffer tvb = BGFXTransientVertexBuffer.callocStack(stack);
@@ -780,5 +767,17 @@ public class Renderer implements Callbacks {
 
     private void refresh(long window) {
         System.out.println("Refresh");
+    }
+
+    public short getQuadProgram() {
+        return quadProgram;
+    }
+
+    public List<Buffer> getBuffersToRemove() {
+        return buffersToRemove;
+    }
+
+    public List<Short> getTexturesToRemove() {
+        return texturesToRemove;
     }
 }
