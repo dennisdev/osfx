@@ -204,6 +204,11 @@
           "desc": "(IIIII)V"
         }
       }
+    },
+    "AbstractFont": {
+      "name": "kn",
+      "fields": {},
+      "methods": {}
     }
   }
 }
