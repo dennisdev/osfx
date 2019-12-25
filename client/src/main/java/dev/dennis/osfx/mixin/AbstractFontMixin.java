@@ -13,4 +13,8 @@ public abstract class AbstractFontMixin implements AbstractFont {
     @Getter("glyphWidths")
     @Override
     public abstract int[] getGlyphWidths();
+
+    @Getter("glyphHeights")
+    @Override
+    public abstract int[] getGlyphHeights();
 }

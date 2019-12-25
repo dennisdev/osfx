@@ -4,4 +4,6 @@ public interface AbstractFont {
     byte[][] getGlyphs();
 
     int[] getGlyphWidths();
+
+    int[] getGlyphHeights();
 }

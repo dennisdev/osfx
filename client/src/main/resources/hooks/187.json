@@ -215,6 +215,10 @@
         "glyphWidths": {
           "name": "y",
           "desc": "[I"
+        },
+        "glyphHeights": {
+          "name": "w",
+          "desc": "[I"
         }
       },
       "methods": {}
