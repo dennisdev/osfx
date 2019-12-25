@@ -5,6 +5,7 @@ import dev.dennis.osfx.api.Client;
 import dev.dennis.osfx.api.Font;
 import dev.dennis.osfx.api.Sprite;
 import dev.dennis.osfx.render.RenderCommand;
+import dev.dennis.osfx.render.RenderGlyphCommand;
 import dev.dennis.osfx.render.RenderSpriteCommand;
 import dev.dennis.osfx.util.KeyMapping;
 import dev.dennis.osfx.util.OsrsAppletStub;
@@ -22,10 +23,7 @@ import org.lwjgl.system.Platform;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
-import java.nio.Buffer;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
+import java.nio.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CyclicBarrier;
@@ -378,6 +376,10 @@ public class Renderer implements Callbacks {
         sync();
     }
 
+    public boolean isBufferProviderPixels() {
+        return client.getBufferProvider().getPixels() == client.getGraphicsPixels();
+    }
+
     @Override
     public boolean drawSprite(Sprite sprite, int x, int y) {
         return drawSprite(sprite, x, y, sprite.getWidth(), sprite.getHeight());
@@ -395,6 +397,9 @@ public class Renderer implements Callbacks {
 
     @Override
     public boolean drawSprite(Sprite sprite, int x, int y, int width, int height, int alpha) {
+        if (!isBufferProviderPixels()) {
+            return false;
+        }
         if (width == 0 || height == 0 || alpha == 0) {
             return true;
         }
@@ -455,7 +460,16 @@ public class Renderer implements Callbacks {
 
     @Override
     public boolean drawGlyph(Font font, byte[] glyph, int x, int y, int width, int height, int rgb, int alpha) {
-        return false;
+        if (!isBufferProviderPixels()) {
+            return false;
+        }
+        if (width == 0 || height == 0 || alpha == 0) {
+            return true;
+        }
+        int glyphId = font.getGlyphIdMap().get(glyph);
+        renderCommands.add(new RenderGlyphCommand(font, glyphId, x, y, width, height, rgb, alpha,
+                client.getScissorX(), client.getScissorY(), client.getScissorWidth(), client.getScissorHeight()));
+        return true;
     }
 
     private void sync() {
@@ -505,8 +519,13 @@ public class Renderer implements Callbacks {
         return bgfx_create_program(vs, fs, destroy);
     }
 
-    public void renderQuad(long encoder, int view, short program, float x, float y,
-                            float width, float height, int rgb, int alpha) {
+    public void renderQuad(long encoder, int view, short program, float x, float y, float width, float height,
+                           int rgb, int alpha) {
+        renderQuad(encoder, view, program, x, y, width, height, rgb, alpha, 0.0f, 0.0f, 1.0f, 1.0f);
+    }
+
+    public void renderQuad(long encoder, int view, short program, float x, float y, float width, float height,
+                           int rgb, int alpha, float minU, float minV, float maxU, float maxV) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             BGFXTransientVertexBuffer tvb = BGFXTransientVertexBuffer.callocStack(stack);
             BGFXTransientIndexBuffer tib = BGFXTransientIndexBuffer.callocStack(stack);
@@ -521,38 +540,37 @@ public class Renderer implements Callbacks {
                 float maxX = x + width;
                 float maxY = y + height;
 
-                int rgba = rgb | alpha << 24;
+                int r = rgb >> 16 & 0xFF;
+                int g = rgb >> 8 & 0xFF;
+                int b = rgb & 0xFF;
 
-                float minU = 0.0f;
-                float minV = 0.0f;
-                float maxU = 1.0f;
-                float maxV = 1.0f;
+                int abgr = alpha << 24 | b << 16 | g << 8 | r;
 
                 vertex.putFloat(minX);
                 vertex.putFloat(minY);
                 vertex.putFloat(z);
-                vertex.putInt(rgba);
+                vertex.putInt(abgr);
                 vertex.putFloat(minU);
                 vertex.putFloat(minV);
 
                 vertex.putFloat(maxX);
                 vertex.putFloat(minY);
                 vertex.putFloat(z);
-                vertex.putInt(rgba);
+                vertex.putInt(abgr);
                 vertex.putFloat(maxU);
                 vertex.putFloat(minV);
 
                 vertex.putFloat(maxX);
                 vertex.putFloat(maxY);
                 vertex.putFloat(z);
-                vertex.putInt(rgba);
+                vertex.putInt(abgr);
                 vertex.putFloat(maxU);
                 vertex.putFloat(maxV);
 
                 vertex.putFloat(minX);
                 vertex.putFloat(maxY);
                 vertex.putFloat(z);
-                vertex.putInt(rgba);
+                vertex.putInt(abgr);
                 vertex.putFloat(minU);
                 vertex.putFloat(maxV);
                 vertex.flip();

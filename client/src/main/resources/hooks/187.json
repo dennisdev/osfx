@@ -48,6 +48,11 @@
         "owner": "lj",
         "name": "au",
         "desc": "I"
+      },
+      "graphicsPixels": {
+        "owner": "lj",
+        "name": "av",
+        "desc": "[I"
       }
     },
     "methods": {

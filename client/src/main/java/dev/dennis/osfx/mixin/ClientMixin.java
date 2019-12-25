@@ -63,4 +63,9 @@ public abstract class ClientMixin implements Client {
     public int getScissorHeight() {
         return getScissorEndY() - getScissorY();
     }
+
+    @Static
+    @Getter("graphicsPixels")
+    @Override
+    public abstract int[] getGraphicsPixels();
 }
