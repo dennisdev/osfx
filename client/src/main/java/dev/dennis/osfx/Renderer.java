@@ -115,6 +115,7 @@ public class Renderer implements Callbacks {
         this.buffersToRemove = new ArrayList<>();
         this.texturesToRemove = new ArrayList<>();
         this.renderCommands = new ArrayList<>();
+        this.fullscreenTextureId = -1;
         this.ortho = new Matrix4f();
     }
 
