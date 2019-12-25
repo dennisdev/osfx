@@ -209,6 +209,11 @@
       "name": "kn",
       "fields": {},
       "methods": {}
+    },
+    "Font": {
+      "name": "ko",
+      "fields": {},
+      "methods": {}
     }
   }
 }
