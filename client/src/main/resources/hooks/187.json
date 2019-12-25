@@ -226,7 +226,16 @@
     "Font": {
       "name": "ko",
       "fields": {},
-      "methods": {}
+      "methods": {
+        "drawGlyph": {
+          "name": "f",
+          "desc": "([BIIIII)V"
+        },
+        "drawGlyphAlpha": {
+          "name": "i",
+          "desc": "([BIIIIII)V"
+        }
+      }
     }
   }
 }
