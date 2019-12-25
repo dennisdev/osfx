@@ -207,7 +207,12 @@
     },
     "AbstractFont": {
       "name": "kn",
-      "fields": {},
+      "fields": {
+        "glyphs": {
+          "name": "f",
+          "desc": "[[B"
+        }
+      },
       "methods": {}
     },
     "Font": {
