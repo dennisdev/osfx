@@ -20,6 +20,16 @@ public abstract class ClientMixin implements Client {
     public abstract BufferProvider getBufferProvider();
 
     @Static
+    @Getter("gameDrawingMode")
+    @Override
+    public abstract int getGameDrawingMode();
+
+    @Static
+    @Setter("gameDrawingMode")
+    @Override
+    public abstract void setGameDrawingMode(int mode);
+
+    @Static
     @Getter("cameraPitch")
     @Override
     public abstract int getCameraPitch();

@@ -9,6 +9,10 @@ public interface Client extends GameEngine {
 
     BufferProvider getBufferProvider();
 
+    int getGameDrawingMode();
+
+    void setGameDrawingMode(int mode);
+
     int getCameraPitch();
 
     int getCameraYaw();

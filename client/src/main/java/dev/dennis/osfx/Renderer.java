@@ -55,6 +55,8 @@ public class Renderer implements Callbacks {
             (ptr, userData) -> MemoryUtil.nmemFree(ptr)
     );
 
+    private static final int DRAW_FULL_MODE = 2;
+
     private final Client client;
 
     private final CyclicBarrier barrier;
@@ -121,6 +123,7 @@ public class Renderer implements Callbacks {
         client.setCallbacks(this);
         client.setStub(new OsrsAppletStub(config));
         client.setSize(width, height);
+        client.setGameDrawingMode(DRAW_FULL_MODE);
         client.init();
         client.start();
     }

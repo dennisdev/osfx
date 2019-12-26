@@ -11,6 +11,12 @@
         "name": "ac",
         "desc": "Llk;"
       },
+      "gameDrawingMode": {
+        "owner": "client",
+        "name": "ou",
+        "desc": "I",
+        "multiplier": -2063650301
+      },
       "cameraPitch": {
         "owner": "dz",
         "name": "hb",
