@@ -5,6 +5,7 @@ import dev.dennis.osfx.inject.adapter.*;
 import dev.dennis.osfx.inject.hook.*;
 import dev.dennis.osfx.inject.mixin.*;
 import dev.dennis.osfx.util.MathUtil;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.Type;
 import org.reflections.Reflections;
 
@@ -105,6 +106,7 @@ public class Injector {
         List<Method> methodsToCopy = new ArrayList<>();
 
         for (Method method : mixinClass.getDeclaredMethods()) {
+            boolean copy = true;
             if (method.isAnnotationPresent(Getter.class)) {
                 addGetterAdapter(mixin, classHook, method);
             } else if (method.isAnnotationPresent(Setter.class)) {
@@ -115,11 +117,12 @@ public class Injector {
                 addInjectCallbackAdapter(mixin, classHook, method);
             } else if (method.isAnnotationPresent(Copy.class)) {
                 addCopyMethodAdapter(mixin, classHook, method);
+                copy = false;
             } else if (method.isAnnotationPresent(Replace.class)) {
                 addReplaceMethodAdapter(mixin, classHook, method);
             }
 
-            if (!Modifier.isAbstract(method.getModifiers())) {
+            if (copy && !Modifier.isAbstract(method.getModifiers())) {
                 methodsToCopy.add(method);
             }
         }
@@ -149,12 +152,18 @@ public class Injector {
 
     private void addCopyMethodAdapter(Mixin mixin, ClassHook classHook, Method method) {
         Copy copy = method.getAnnotation(Copy.class);
-        boolean isStatic = method.isAnnotationPresent(Static.class);
+        boolean isStatic = method.isAnnotationPresent(Static.class) || Modifier.isStatic(method.getModifiers());
         String owner;
         String name;
         String desc;
         if (isStatic) {
-            throw new UnsupportedOperationException();
+            StaticMethodHook methodHook = hooks.getStaticMethod(copy.value());
+            if (methodHook == null) {
+                throw new IllegalStateException("No static method hook found for " + copy.value());
+            }
+            owner = methodHook.getOwner();
+            name = methodHook.getName();
+            desc = methodHook.getDesc();
         } else {
             MethodHook methodHook = classHook.getMethod(copy.value());
             if (methodHook == null) {
@@ -165,9 +174,9 @@ public class Injector {
             desc = methodHook.getDesc();
         }
 
-        copyAdapterGroup.addAdapter(classHook.getName(),
-                new CopyMethodAdapter(copyAdapterGroup.delegate(owner), name, desc,
-                        copyAdapterGroup.delegate(classHook.getName()), method.getName()));
+        ClassVisitor delegate = copyAdapterGroup.delegate(classHook.getName());
+        copyAdapterGroup.addAdapter(owner, new CopyMethodAdapter(copyAdapterGroup.delegate(owner),
+                name, desc, delegate, method.getName()));
     }
 
     private void addGetterAdapter(Mixin mixin, ClassHook classHook, Method method) {

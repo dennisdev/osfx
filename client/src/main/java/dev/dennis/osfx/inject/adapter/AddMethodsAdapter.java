@@ -113,6 +113,7 @@ public class AddMethodsAdapter extends ClassVisitor {
             if (owner.equals(Type.getType(mixinClass).getInternalName())) {
                 Mixin mixin = mixinClass.getAnnotation(Mixin.class);
                 ClassHook classHook = hooks.getClassHook(mixin.value());
+                boolean isStatic = opcode == Opcodes.INVOKESTATIC;
                 owner = classHook.getName();
                 Method method = null;
                 for (Method m : mixinClass.getDeclaredMethods()) {
@@ -127,13 +128,25 @@ public class AddMethodsAdapter extends ClassVisitor {
                         hookName = method.getAnnotation(Copy.class).value();
                     }
                     if (hookName != null) {
-                        MethodHook methodHook = classHook.getMethod(hookName);
-                        if (methodHook == null) {
-                            throw new IllegalStateException("No method hook found for " + mixin.value() + "." + hookName);
+                        Integer dummyValue;
+                        if (isStatic) {
+                            StaticMethodHook methodHook = hooks.getStaticMethod(hookName);
+                            if (methodHook == null) {
+                                throw new IllegalStateException("No static method hook found for " + hookName);
+                            }
+                            descriptor = methodHook.getDesc();
+                            dummyValue = methodHook.getDummyValue();
+                        } else {
+                            MethodHook methodHook = classHook.getMethod(hookName);
+                            if (methodHook == null) {
+                                throw new IllegalStateException("No method hook found for " + mixin.value() + "."
+                                        + hookName);
+                            }
+                            descriptor = methodHook.getDesc();
+                            dummyValue = methodHook.getDummyValue();
                         }
-                        descriptor = methodHook.getDesc();
-                        if (methodHook.getDummyValue() != null) {
-                            push(methodHook.getDummyValue());
+                        if (dummyValue != null) {
+                            push(dummyValue);
                         }
                     }
                 }
