@@ -98,13 +98,12 @@ public class Renderer implements Callbacks {
     private final Matrix4f ortho;
 
     private static boolean isPointOnCanvas(Canvas canvas, int x, int y) {
-        Point loc = canvas.getLocation();
-        return x >= loc.x && y >= loc.y && x <= loc.x + canvas.getWidth() && y <= loc.y + canvas.getHeight();
+        return x >= canvas.getX() && y >= canvas.getY()
+                && x <= canvas.getX() + canvas.getWidth() && y <= canvas.getY() + canvas.getHeight();
     }
 
     private static Point translateToCanvas(Canvas canvas, int x, int y) {
-        Point loc = canvas.getLocation();
-        return new Point(x - loc.x, y - loc.y);
+        return new Point(x - canvas.getX(), y - canvas.getY());
     }
 
     public Renderer(Client client, int width, int height) {
@@ -239,6 +238,12 @@ public class Renderer implements Callbacks {
                 1.0f,
                 0);
 
+        bgfx_set_view_clear(1,
+                BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
+                0x000000FF,
+                1.0f,
+                0);
+
         BGFXTextureInfo textureInfo = BGFXTextureInfo.mallocStack(stack);
         bgfx_calc_texture_size(textureInfo, MAX_WIDTH, MAX_HEIGHT, 1, false, false,
                 1, BGFX_TEXTURE_FORMAT_BGRA8);
@@ -289,8 +294,12 @@ public class Renderer implements Callbacks {
         // Start of frame
         glfwPollEvents();
 
-        bgfx_set_view_rect(0, 0, 0, width, height);
         bgfx_dbg_text_clear(0, false);
+
+        Canvas canvas = client.getCanvas();
+
+        bgfx_set_view_rect(0, 0, 0, width, height);
+        bgfx_set_view_rect(1, canvas.getX(), canvas.getY(), width, height);
 
         for (Buffer buf : buffersToRemove) {
             MemoryUtil.memFree(buf);
@@ -316,7 +325,7 @@ public class Renderer implements Callbacks {
         // End of frame
         ortho.setOrthoLH(0.0f, width, height, 0.0f, 0.0f, 1.0f, !bgfxCaps.homogeneousDepth());
         ortho.get(orthoBuf);
-        bgfx_set_view_transform(0, null, orthoBuf);
+        bgfx_set_view_transform(1, null, orthoBuf);
 
         long encoder = bgfx_encoder_begin(false);
 
@@ -329,6 +338,7 @@ public class Renderer implements Callbacks {
         bgfx_encoder_end(encoder);
 
         bgfx_touch(0);
+        bgfx_touch(1);
 
         bgfx_frame(false);
         sync();
@@ -338,11 +348,10 @@ public class Renderer implements Callbacks {
         updateFullscreenTexture();
 
         Canvas canvas = client.getCanvas();
-        Point canvasLoc = canvas.getLocation();
 
         bgfx_encoder_set_texture(encoder, 0, (short) 0, fullscreenTextureId, BGFX_SAMPLER_NONE);
         bgfx_encoder_set_state(encoder, BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A, 0);
-        renderQuad(encoder, 0, quadProgram, canvasLoc.x, canvasLoc.y, canvas.getWidth(), canvas.getHeight(),
+        renderQuad(encoder, 1, quadProgram, 0, 0, canvas.getWidth(), canvas.getHeight(),
                 0xFFFFFF, 255);
     }
 
@@ -381,6 +390,22 @@ public class Renderer implements Callbacks {
 
     public boolean isBufferProviderPixels() {
         return client.getBufferProvider().getPixels() == client.getGraphicsPixels();
+    }
+
+    private int getScissorX() {
+        return client.getScissorX() + client.getCanvas().getX();
+    }
+
+    private int getScissorY() {
+        return client.getScissorY() + client.getCanvas().getY();
+    }
+
+    private int getScissorWidth() {
+        return client.getScissorWidth();
+    }
+
+    private int getScissorHeight() {
+        return client.getScissorHeight();
     }
 
     @Override
@@ -452,7 +477,7 @@ public class Renderer implements Callbacks {
         pixelsBuf.put(pixels);
         pixelsBuf.flip();
         renderCommands.add(new RenderSpriteCommand(pixelsBuf, spriteWidth, spriteHeight, x, y, width, height, alpha,
-                client.getScissorX(), client.getScissorY(), client.getScissorWidth(), client.getScissorHeight()));
+                getScissorX(), getScissorY(), getScissorWidth(), getScissorHeight()));
         return true;
     }
 
@@ -471,7 +496,7 @@ public class Renderer implements Callbacks {
         }
         int glyphId = font.getGlyphIdMap().get(glyph);
         renderCommands.add(new RenderGlyphCommand(font, glyphId, x, y, width, height, rgb, alpha,
-                client.getScissorX(), client.getScissorY(), client.getScissorWidth(), client.getScissorHeight()));
+                getScissorX(), getScissorY(), getScissorWidth(), getScissorHeight()));
         return true;
     }
 
@@ -800,6 +825,10 @@ public class Renderer implements Callbacks {
 
     private void refresh(long window) {
         System.out.println("Refresh");
+    }
+
+    public Client getClient() {
+        return client;
     }
 
     public short getQuadProgram() {

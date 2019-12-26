@@ -126,7 +126,7 @@ public class RenderGlyphCommand implements RenderCommand {
         maxU += (float) width / (float) font.getTextureSize();
         maxV += (float) height / (float) font.getTextureSize();
 
-        renderer.renderQuad(encoder, 0, renderer.getQuadProgram(), x, y, width, height, rgb, alpha,
+        renderer.renderQuad(encoder, 1, renderer.getQuadProgram(), x, y, width, height, rgb, alpha,
                 minU, minV, maxU, maxV);
     }
 

@@ -58,7 +58,7 @@ public class RenderSpriteCommand implements RenderCommand {
         bgfx_encoder_set_texture(encoder, 0, (short) 0, textureId, BGFX_SAMPLER_NONE);
         long state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA;
         bgfx_encoder_set_state(encoder, state, 0);
-        renderer.renderQuad(encoder, 0, renderer.getQuadProgram(), x, y, width, height, 0xFFFFFF, alpha);
+        renderer.renderQuad(encoder, 1, renderer.getQuadProgram(), x, y, width, height, 0xFFFFFF, alpha);
     }
 
     @Override
