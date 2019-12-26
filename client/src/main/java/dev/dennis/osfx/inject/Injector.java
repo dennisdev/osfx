@@ -4,6 +4,7 @@ import com.google.common.io.ByteStreams;
 import dev.dennis.osfx.inject.adapter.*;
 import dev.dennis.osfx.inject.hook.*;
 import dev.dennis.osfx.inject.mixin.*;
+import dev.dennis.osfx.util.MathUtil;
 import org.objectweb.asm.Type;
 import org.reflections.Reflections;
 
@@ -96,8 +97,8 @@ public class Injector {
                 }
                 String setterDesc = Type.getMethodDescriptor(Type.VOID_TYPE, fieldType);
                 preCopyAdapterGroup.addAdapter(obfClassName, delegate ->
-                        new AddSetterAdapter(delegate, setterName, setterDesc, fieldName, fieldType.getDescriptor(),
-                                null));
+                        new AddSetterAdapter(delegate, setterName, setterDesc, isStatic, classHook.getName(),
+                                fieldName, fieldType.getDescriptor(), null));
             }
         }
 
@@ -213,22 +214,49 @@ public class Injector {
         }
         Setter setter = method.getAnnotation(Setter.class);
         boolean isStatic = method.isAnnotationPresent(Static.class);
+        String fieldOwner;
+        String fieldName;
+        String fieldDesc;
+        Number fieldMultiplier;
         if (isStatic) {
             StaticFieldHook fieldHook = hooks.getStaticField(setter.value());
             if (fieldHook == null) {
                 throw new IllegalStateException("No static field hook found for " + setter.value());
             }
-            throw new UnsupportedOperationException();
+            fieldOwner = fieldHook.getOwner();
+            fieldName = fieldHook.getName();
+            fieldDesc = fieldHook.getDesc();
+            fieldMultiplier = fieldHook.getMultiplier();
         } else {
             FieldHook fieldHook = classHook.getField(setter.value());
             if (fieldHook == null) {
                 throw new IllegalStateException("No field hook found for " + mixin.value() + "."
                         + setter.value());
             }
-            preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
-                    new AddSetterAdapter(delegate, method.getName(), Type.getMethodDescriptor(method),
-                            fieldHook.getName(), fieldHook.getDesc(), fieldHook.getMultiplier()));
+            fieldOwner = classHook.getName();
+            fieldName = fieldHook.getName();
+            fieldDesc = fieldHook.getDesc();
+            fieldMultiplier = fieldHook.getMultiplier();
         }
+        Type fieldType = Type.getType(fieldDesc);
+        Number inversedMultiplier;
+        if (fieldMultiplier != null) {
+            // The field multiplier is for decoding the value
+            // so we must inverse it to encode it
+            if (fieldType.equals(Type.INT_TYPE)) {
+                inversedMultiplier = MathUtil.modInverse(fieldMultiplier.intValue());
+            } else if (fieldType.equals(Type.LONG_TYPE)) {
+                inversedMultiplier = MathUtil.modInverse(fieldMultiplier.longValue());
+            } else {
+                throw new IllegalStateException("Setter method " + mixin.value() + "." + method.getName()
+                        + "'s hook has a multiplier with the wrong type");
+            }
+        } else {
+            inversedMultiplier = null;
+        }
+        preCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
+                new AddSetterAdapter(delegate, method.getName(), Type.getMethodDescriptor(method), isStatic,
+                        fieldOwner, fieldName, fieldDesc, inversedMultiplier));
     }
 
     private void addInvokeAdapter(Mixin mixin, ClassHook classHook, Method method) {

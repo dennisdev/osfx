@@ -13,6 +13,10 @@ public class AddSetterAdapter extends ClassVisitor {
 
     private final String setterDesc;
 
+    private final boolean isStatic;
+
+    private final String fieldOwner;
+
     private final String fieldName;
 
     private final String fieldDesc;
@@ -21,11 +25,13 @@ public class AddSetterAdapter extends ClassVisitor {
 
     private String owner;
 
-    public AddSetterAdapter(ClassVisitor classVisitor, String setterName, String setterDesc,
-                            String fieldName, String fieldDesc, Number fieldMultiplier) {
+    public AddSetterAdapter(ClassVisitor classVisitor, String setterName, String setterDesc, boolean isStatic,
+                            String fieldOwner, String fieldName, String fieldDesc, Number fieldMultiplier) {
         super(Opcodes.ASM7, classVisitor);
         this.setterName = setterName;
         this.setterDesc = setterDesc;
+        this.isStatic = isStatic;
+        this.fieldOwner = fieldOwner;
         this.fieldName = fieldName;
         this.fieldDesc = fieldDesc;
         this.fieldMultiplier = fieldMultiplier;
@@ -43,9 +49,30 @@ public class AddSetterAdapter extends ClassVisitor {
 
         GeneratorAdapter gen = new GeneratorAdapter(mv, ACCESS, setterName, setterDesc);
 
-        gen.loadThis();
+        Type fieldType = Type.getType(fieldDesc);
+
+        if (!isStatic) {
+            gen.loadThis();
+        }
+
         gen.loadArg(0);
-        gen.putField(Type.getObjectType(owner), fieldName, Type.getType(fieldDesc));
+
+        if (fieldMultiplier != null) {
+            if (fieldType.equals(Type.INT_TYPE)) {
+                gen.push(fieldMultiplier.intValue());
+                gen.visitInsn(Opcodes.IMUL);
+            } else if (fieldType.equals(Type.LONG_TYPE)) {
+                gen.push((Long) fieldMultiplier);
+                gen.visitInsn(Opcodes.LMUL);
+            }
+        }
+
+        if (isStatic) {
+            gen.putStatic(Type.getObjectType(fieldOwner), fieldName, fieldType);
+        } else {
+            gen.putField(Type.getObjectType(owner), fieldName, fieldType);
+        }
+
         gen.returnValue();
         gen.visitMaxs(0, 0);
         gen.visitEnd();
