@@ -62,7 +62,7 @@ public class AddGetterAdapter extends ClassVisitor {
                 gen.push(fieldMultiplier.intValue());
                 gen.visitInsn(Opcodes.IMUL);
             } else if (fieldType.equals(Type.LONG_TYPE)) {
-                gen.push((Long) fieldMultiplier);
+                gen.push(fieldMultiplier.longValue());
                 gen.visitInsn(Opcodes.LMUL);
             }
         }
