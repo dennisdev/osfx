@@ -8,7 +8,9 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -32,6 +34,7 @@ public class AdapterGroup {
 
     public void apply(Map<String, byte[]> classes) {
         clientTypeHierarchyReader.setClasses(classes);
+        List<String> classesToWrite = new ArrayList<>();
         for (Map.Entry<String, ClassVisitor> adapterEntry : adapters.entrySet()) {
             String className = adapterEntry.getKey();
             ClassVisitor adapter = adapterEntry.getValue();
@@ -46,7 +49,10 @@ public class AdapterGroup {
             ClassReader classReader = new ClassReader(classData);
             classReader.accept(adapter, ClassReader.EXPAND_FRAMES);
 
-            classes.put(className, writer.toByteArray());
+            classesToWrite.add(className);
+        }
+        for (String className : classesToWrite) {
+            classes.put(className, writers.get(className).toByteArray());
         }
     }
 
