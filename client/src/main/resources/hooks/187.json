@@ -62,6 +62,16 @@
       }
     },
     "methods": {
+      "fillRectangle": {
+        "owner": "lj",
+        "name": "dg",
+        "desc": "(IIIII)V"
+      },
+      "fillRectangleAlpha": {
+        "owner": "lj",
+        "name": "dr",
+        "desc": "(IIIIII)V"
+      },
       "drawGlyphShadow": {
         "owner": "kn",
         "name": "aq",

@@ -3,6 +3,7 @@ package dev.dennis.osfx;
 import dev.dennis.osfx.api.*;
 import dev.dennis.osfx.render.RenderCommand;
 import dev.dennis.osfx.render.RenderGlyphCommand;
+import dev.dennis.osfx.render.RenderRectangleCommand;
 import dev.dennis.osfx.render.RenderSpriteCommand;
 import dev.dennis.osfx.util.KeyMapping;
 import dev.dennis.osfx.util.OsrsAppletStub;
@@ -84,11 +85,15 @@ public class Renderer implements Callbacks {
 
     private IntBuffer fullscreenTextureBuf;
 
+    private IntBuffer whiteTextureBuf;
+
     private BGFXVertexLayout layout;
 
     private short quadProgram;
 
     private short fullscreenTextureId;
+
+    private short whiteTextureId;
 
     private FloatBuffer orthoBuf;
 
@@ -112,6 +117,7 @@ public class Renderer implements Callbacks {
         this.texturesToRemove = new ArrayList<>();
         this.renderCommands = new ArrayList<>();
         this.fullscreenTextureId = -1;
+        this.whiteTextureId = -1;
         this.ortho = new Matrix4f();
     }
 
@@ -245,6 +251,11 @@ public class Renderer implements Callbacks {
         bgfx_calc_texture_size(textureInfo, MAX_WIDTH, MAX_HEIGHT, 1, false, false,
                 1, BGFX_TEXTURE_FORMAT_BGRA8);
         fullscreenTextureBuf = MemoryUtil.memAllocInt(textureInfo.storageSize() / 4 + 1);
+        whiteTextureBuf = MemoryUtil.memAllocInt(1);
+        whiteTextureBuf.put(0xFFFFFFFF);
+        whiteTextureBuf.flip();
+        whiteTextureId = bgfx_create_texture_2d(1, 1, false, 1,
+                BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, bgfx_make_ref(whiteTextureBuf));
 
         quadProgram = createProgram("vs_quad", "fs_quad");
 
@@ -272,11 +283,13 @@ public class Renderer implements Callbacks {
 
     private void destroyBgfx() {
         MemoryUtil.memFree(fullscreenTextureBuf);
+        MemoryUtil.memFree(whiteTextureBuf);
         MemoryUtil.memFree(orthoBuf);
 
         layout.free();
 
         bgfx_destroy_texture(fullscreenTextureId);
+        bgfx_destroy_texture(whiteTextureId);
 
         bgfx_destroy_program(quadProgram);
 
@@ -403,6 +416,25 @@ public class Renderer implements Callbacks {
 
     private int getScissorHeight() {
         return client.getScissorHeight();
+    }
+
+    @Override
+    public boolean fillRectangle(int x, int y, int width, int height, int rgb) {
+        return fillRectangle(x, y, width, height, rgb, 255);
+    }
+
+    @Override
+    public boolean fillRectangle(int x, int y, int width, int height, int rgb, int alpha) {
+        if (!isBufferProviderPixels()) {
+            return false;
+        }
+        if (width == 0 || height == 0 || alpha == 0) {
+            return true;
+        }
+        alpha = Math.min(alpha, 255);
+        renderCommands.add(new RenderRectangleCommand(x, y, width, height, rgb, alpha, getScissorX(), getScissorY(),
+                getScissorWidth(), getScissorHeight()));
+        return true;
     }
 
     @Override
@@ -838,5 +870,9 @@ public class Renderer implements Callbacks {
 
     public List<Short> getTexturesToRemove() {
         return texturesToRemove;
+    }
+
+    public short getWhiteTextureId() {
+        return whiteTextureId;
     }
 }

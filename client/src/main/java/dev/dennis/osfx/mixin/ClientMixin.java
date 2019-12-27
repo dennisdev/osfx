@@ -1,16 +1,16 @@
 package dev.dennis.osfx.mixin;
 
 import dev.dennis.osfx.api.AbstractFont;
-import dev.dennis.osfx.inject.mixin.Getter;
-import dev.dennis.osfx.inject.mixin.Mixin;
-import dev.dennis.osfx.inject.mixin.Setter;
-import dev.dennis.osfx.inject.mixin.Static;
+import dev.dennis.osfx.inject.mixin.*;
 import dev.dennis.osfx.Callbacks;
 import dev.dennis.osfx.api.BufferProvider;
 import dev.dennis.osfx.api.Client;
 
 @Mixin("Client")
 public abstract class ClientMixin implements Client {
+    @Shadow
+    private static Client client;
+
     @Getter
     @Setter
     private Callbacks callbacks;
@@ -18,6 +18,34 @@ public abstract class ClientMixin implements Client {
     @Getter
     @Setter
     private AbstractFont currentFont;
+
+    @Copy("fillRectangle")
+    private static void rs$fillRectangle(int x, int y, int width, int height, int rgb) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Replace("fillRectangle")
+    public static void hd$fillRectangle(int x, int y, int width, int height, int rgb) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.fillRectangle(x, y, width, height, rgb)) {
+            return;
+        }
+        rs$fillRectangle(x, y, width, height, rgb);
+    }
+
+    @Copy("fillRectangleAlpha")
+    private static void rs$fillRectangleAlpha(int x, int y, int width, int height, int rgb, int alpha) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Replace("fillRectangleAlpha")
+    public static void hd$fillRectangleAlpha(int x, int y, int width, int height, int rgb, int alpha) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.fillRectangle(x, y, width, height, rgb, alpha)) {
+            return;
+        }
+        rs$fillRectangleAlpha(x, y, width, height, rgb, alpha);
+    }
 
     @Static
     @Getter("bufferProvider")
