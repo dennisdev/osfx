@@ -12,17 +12,20 @@ public class ReplaceMethodAdapter extends ClassVisitor {
 
     private final String desc;
 
+    private final boolean isStatic;
+
     private final String targetOwner;
 
     private final String targetName;
 
     private final String targetDesc;
 
-    public ReplaceMethodAdapter(ClassVisitor classVisitor, String name, String desc,
+    public ReplaceMethodAdapter(ClassVisitor classVisitor, String name, String desc, boolean isStatic,
                                 String targetOwner, String targetName, String targetDesc) {
         super(Opcodes.ASM7, classVisitor);
         this.name = name;
         this.desc = desc;
+        this.isStatic = isStatic;
         this.targetOwner = targetOwner;
         this.targetName = targetName;
         this.targetDesc = targetDesc;
@@ -58,13 +61,22 @@ public class ReplaceMethodAdapter extends ClassVisitor {
         public void visitCode() {
             GeneratorAdapter gen = new GeneratorAdapter(mv, access, name, desc);
 
+            Type ownerType = Type.getObjectType(targetOwner);
+            Method targetMethod = new Method(targetName, targetDesc);
+
             gen.visitCode();
-            gen.loadThis();
+            if (!isStatic) {
+                gen.loadThis();
+            }
             int argCount = Type.getArgumentTypes(targetDesc).length;
             for (int i = 0; i < argCount; i++) {
                 gen.loadArg(i);
             }
-            gen.invokeVirtual(Type.getObjectType(targetOwner), new Method(targetName, targetDesc));
+            if (isStatic) {
+                gen.invokeStatic(ownerType, targetMethod);
+            } else {
+                gen.invokeVirtual(ownerType, targetMethod);
+            }
             gen.returnValue();
 
             gen.visitMaxs(0, 0);

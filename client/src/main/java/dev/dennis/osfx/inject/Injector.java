@@ -135,19 +135,30 @@ public class Injector {
 
     private void addReplaceMethodAdapter(Mixin mixin, ClassHook classHook, Method method) {
         Replace replace = method.getAnnotation(Replace.class);
-        boolean isStatic = method.isAnnotationPresent(Static.class);
+        boolean isStatic = method.isAnnotationPresent(Static.class) || Modifier.isStatic(method.getModifiers());
+        String owner;
+        String name;
+        String desc;
         if (isStatic) {
-            throw new UnsupportedOperationException();
+            StaticMethodHook methodHook = hooks.getStaticMethod(replace.value());
+            if (methodHook == null) {
+                throw new IllegalStateException("No static method hook found for " + replace.value());
+            }
+            owner = methodHook.getOwner();
+            name = methodHook.getName();
+            desc = methodHook.getDesc();
         } else {
             MethodHook methodHook = classHook.getMethod(replace.value());
             if (methodHook == null) {
                 throw new IllegalStateException("No method hook found for " + mixin.value() + "." + replace.value());
             }
-
-            postCopyAdapterGroup.addAdapter(classHook.getName(), delegate ->
-                    new ReplaceMethodAdapter(delegate, methodHook.getName(), methodHook.getDesc(),
-                            classHook.getName(), method.getName(), Type.getMethodDescriptor(method)));
+            owner = classHook.getName();
+            name = methodHook.getName();
+            desc = methodHook.getDesc();
         }
+        postCopyAdapterGroup.addAdapter(owner, delegate ->
+                new ReplaceMethodAdapter(delegate, name, desc, isStatic, classHook.getName(), method.getName(),
+                        Type.getMethodDescriptor(method)));
     }
 
     private void addCopyMethodAdapter(Mixin mixin, ClassHook classHook, Method method) {
