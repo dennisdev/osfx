@@ -7,6 +7,10 @@ public interface Client extends GameEngine {
 
     void setCallbacks(Callbacks callbacks);
 
+    AbstractFont getCurrentFont();
+
+    void setCurrentFont(AbstractFont font);
+
     BufferProvider getBufferProvider();
 
     int getGameDrawingMode();

@@ -1,9 +1,6 @@
 package dev.dennis.osfx;
 
-import dev.dennis.osfx.api.BufferProvider;
-import dev.dennis.osfx.api.Client;
-import dev.dennis.osfx.api.Font;
-import dev.dennis.osfx.api.Sprite;
+import dev.dennis.osfx.api.*;
 import dev.dennis.osfx.render.RenderCommand;
 import dev.dennis.osfx.render.RenderGlyphCommand;
 import dev.dennis.osfx.render.RenderSpriteCommand;
@@ -482,12 +479,12 @@ public class Renderer implements Callbacks {
     }
 
     @Override
-    public boolean drawGlyph(Font font, byte[] glyph, int x, int y, int width, int height, int rgb) {
+    public boolean drawGlyph(AbstractFont font, byte[] glyph, int x, int y, int width, int height, int rgb) {
         return drawGlyph(font, glyph, x, y, width, height, rgb, 255);
     }
 
     @Override
-    public boolean drawGlyph(Font font, byte[] glyph, int x, int y, int width, int height, int rgb, int alpha) {
+    public boolean drawGlyph(AbstractFont font, byte[] glyph, int x, int y, int width, int height, int rgb, int alpha) {
         if (!isBufferProviderPixels()) {
             return false;
         }

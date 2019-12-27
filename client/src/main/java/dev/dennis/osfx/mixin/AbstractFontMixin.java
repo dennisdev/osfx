@@ -1,16 +1,17 @@
 package dev.dennis.osfx.mixin;
 
 import dev.dennis.osfx.api.AbstractFont;
-import dev.dennis.osfx.inject.mixin.Getter;
-import dev.dennis.osfx.inject.mixin.Inject;
-import dev.dennis.osfx.inject.mixin.Mixin;
-import dev.dennis.osfx.inject.mixin.Setter;
+import dev.dennis.osfx.api.Client;
+import dev.dennis.osfx.inject.mixin.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Mixin("AbstractFont")
 public abstract class AbstractFontMixin implements AbstractFont {
+    @Shadow
+    private static Client client;
+
     @Getter
     private Map<byte[], Integer> glyphIdMap;
 
@@ -34,6 +35,16 @@ public abstract class AbstractFontMixin implements AbstractFont {
                 glyphIdMap.put(glyph, id++);
             }
         }
+    }
+
+    @Inject("drawText")
+    private void onDrawText() {
+        client.setCurrentFont(this);
+    }
+
+    @Inject("drawMouseoverText")
+    private void onDrawMouseoverText() {
+        client.setCurrentFont(this);
     }
 
     @Getter("glyphs")

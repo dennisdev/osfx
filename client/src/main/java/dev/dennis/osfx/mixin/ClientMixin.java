@@ -1,5 +1,6 @@
 package dev.dennis.osfx.mixin;
 
+import dev.dennis.osfx.api.AbstractFont;
 import dev.dennis.osfx.inject.mixin.Getter;
 import dev.dennis.osfx.inject.mixin.Mixin;
 import dev.dennis.osfx.inject.mixin.Setter;
@@ -13,6 +14,10 @@ public abstract class ClientMixin implements Client {
     @Getter
     @Setter
     private Callbacks callbacks;
+
+    @Getter
+    @Setter
+    private AbstractFont currentFont;
 
     @Static
     @Getter("bufferProvider")

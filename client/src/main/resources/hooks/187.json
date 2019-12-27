@@ -62,7 +62,16 @@
       }
     },
     "methods": {
-
+      "drawGlyphShadow": {
+        "owner": "kn",
+        "name": "aq",
+        "desc": "([BIIIII)V"
+      },
+      "drawGlyphAlphaShadow": {
+        "owner": "kn",
+        "name": "an",
+        "desc": "([BIIIIII)V"
+      }
     }
   },
   "classes": {
@@ -232,7 +241,16 @@
           "desc": "[I"
         }
       },
-      "methods": {}
+      "methods": {
+        "drawText": {
+          "name": "au",
+          "desc": "(Ljava/lang/String;II)V"
+        },
+        "drawMouseoverText": {
+          "name": "ah",
+          "desc": "(Ljava/lang/String;II[I[I)V"
+        }
+      }
     },
     "Font": {
       "name": "ko",

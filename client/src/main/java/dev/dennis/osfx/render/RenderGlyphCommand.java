@@ -1,7 +1,7 @@
 package dev.dennis.osfx.render;
 
 import dev.dennis.osfx.Renderer;
-import dev.dennis.osfx.api.Font;
+import dev.dennis.osfx.api.AbstractFont;
 import dev.dennis.osfx.util.MathUtil;
 import org.lwjgl.system.MemoryUtil;
 
@@ -14,7 +14,7 @@ public class RenderGlyphCommand implements RenderCommand {
 
     private static final int GLYPH_ROWS = (int) Math.sqrt(GLYPH_COUNT);
 
-    private final Font font;
+    private final AbstractFont font;
 
     private final int glyphId;
 
@@ -40,7 +40,7 @@ public class RenderGlyphCommand implements RenderCommand {
 
     private IntBuffer pixelsBuf;
 
-    public RenderGlyphCommand(Font font, int glyphId, int x, int y, int width, int height, int rgb, int alpha,
+    public RenderGlyphCommand(AbstractFont font, int glyphId, int x, int y, int width, int height, int rgb, int alpha,
                               int scissorX, int scissorY, int scissorWidth, int scissorHeight) {
         this.font = font;
         this.glyphId = glyphId;

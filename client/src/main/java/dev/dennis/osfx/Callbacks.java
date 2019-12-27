@@ -1,6 +1,6 @@
 package dev.dennis.osfx;
 
-import dev.dennis.osfx.api.Font;
+import dev.dennis.osfx.api.AbstractFont;
 import dev.dennis.osfx.api.Sprite;
 
 public interface Callbacks {
@@ -16,7 +16,7 @@ public interface Callbacks {
 
     boolean drawSprite(Sprite sprite, int x, int y, int width, int height, int alpha);
 
-    boolean drawGlyph(Font font, byte[] glyph, int x, int y, int width, int height, int rgb);
+    boolean drawGlyph(AbstractFont font, byte[] glyph, int x, int y, int width, int height, int rgb);
 
-    boolean drawGlyph(Font font, byte[] glyph, int x, int y, int width, int height, int rgb, int alpha);
+    boolean drawGlyph(AbstractFont font, byte[] glyph, int x, int y, int width, int height, int rgb, int alpha);
 }
