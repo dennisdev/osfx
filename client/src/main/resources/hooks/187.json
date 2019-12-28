@@ -295,6 +295,44 @@
           "desc": "([BIIIIII)V"
         }
       }
+    },
+    "IndexedSprite": {
+      "name": "li",
+      "fields": {
+        "pixels": {
+          "name": "f",
+          "desc": "[B"
+        },
+        "palette": {
+          "name": "i",
+          "desc": "[I"
+        },
+        "width": {
+          "name": "y",
+          "desc": "I"
+        },
+        "height": {
+          "name": "w",
+          "desc": "I"
+        },
+        "offsetX": {
+          "name": "p",
+          "desc": "I"
+        },
+        "offsetY": {
+          "name": "b",
+          "desc": "I"
+        },
+        "maxWidth": {
+          "name": "e",
+          "desc": "I"
+        },
+        "maxHeight": {
+          "name": "x",
+          "desc": "I"
+        }
+      },
+      "methods": {}
     }
   }
 }
