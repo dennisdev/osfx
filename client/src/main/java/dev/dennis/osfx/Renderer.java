@@ -438,6 +438,26 @@ public class Renderer implements Callbacks {
     }
 
     @Override
+    public boolean drawHorizontalLine(int x, int y, int width, int rgb) {
+        return drawHorizontalLine(x, y, width, rgb, 255);
+    }
+
+    @Override
+    public boolean drawHorizontalLine(int x, int y, int width, int rgb, int alpha) {
+        return fillRectangle(x, y, width, 1, rgb, alpha);
+    }
+
+    @Override
+    public boolean drawVerticalLine(int x, int y, int height, int rgb) {
+        return drawVerticalLine(x, y, height, rgb, 255);
+    }
+
+    @Override
+    public boolean drawVerticalLine(int x, int y, int height, int rgb, int alpha) {
+        return fillRectangle(x, y, 1, height, rgb, alpha);
+    }
+
+    @Override
     public boolean drawSprite(Sprite sprite, int x, int y) {
         return drawSprite(sprite, x, y, sprite.getWidth(), sprite.getHeight());
     }

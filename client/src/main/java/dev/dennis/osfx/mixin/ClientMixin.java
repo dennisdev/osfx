@@ -47,6 +47,62 @@ public abstract class ClientMixin implements Client {
         rs$fillRectangleAlpha(x, y, width, height, rgb, alpha);
     }
 
+    @Copy("drawHorizontalLine")
+    private static void rs$drawHorizontalLine(int x, int y, int width, int rgb) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Replace("drawHorizontalLine")
+    public static void hd$drawHorizontalLine(int x, int y, int width, int rgb) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawHorizontalLine(x, y, width, rgb)) {
+            return;
+        }
+        rs$drawHorizontalLine(x, y, width, rgb);
+    }
+
+    @Copy("drawHorizontalLineAlpha")
+    private static void rs$drawHorizontalLineAlpha(int x, int y, int width, int rgb, int alpha) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Replace("drawHorizontalLineAlpha")
+    public static void hd$drawHorizontalLineAlpha(int x, int y, int width, int rgb, int alpha) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawHorizontalLine(x, y, width, rgb, alpha)) {
+            return;
+        }
+        rs$drawHorizontalLineAlpha(x, y, width, rgb, alpha);
+    }
+
+    @Copy("drawVerticalLine")
+    private static void rs$drawVerticalLine(int x, int y, int height, int rgb) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Replace("drawVerticalLine")
+    public static void hd$drawVerticalLine(int x, int y, int height, int rgb) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawVerticalLine(x, y, height, rgb)) {
+            return;
+        }
+        rs$drawVerticalLine(x, y, height, rgb);
+    }
+
+    @Copy("drawVerticalLineAlpha")
+    private static void rs$drawVerticalLineAlpha(int x, int y, int height, int rgb, int alpha) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Replace("drawVerticalLineAlpha")
+    public static void hd$drawVerticalLineAlpha(int x, int y, int height, int rgb, int alpha) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawVerticalLine(x, y, height, rgb, alpha)) {
+            return;
+        }
+        rs$drawVerticalLineAlpha(x, y, height, rgb, alpha);
+    }
+
     @Static
     @Getter("bufferProvider")
     @Override

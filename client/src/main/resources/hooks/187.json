@@ -72,6 +72,26 @@
         "name": "dr",
         "desc": "(IIIIII)V"
       },
+      "drawHorizontalLine": {
+        "owner": "lj",
+        "name": "db",
+        "desc": "(IIII)V"
+      },
+      "drawHorizontalLineAlpha": {
+        "owner": "lj",
+        "name": "dn",
+        "desc": "(IIIII)V"
+      },
+      "drawVerticalLine": {
+        "owner": "lj",
+        "name": "dt",
+        "desc": "(IIII)V"
+      },
+      "drawVerticalLineAlpha": {
+        "owner": "lj",
+        "name": "dc",
+        "desc": "(IIIII)V"
+      },
       "drawGlyphShadow": {
         "owner": "kn",
         "name": "aq",

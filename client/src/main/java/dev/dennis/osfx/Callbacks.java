@@ -12,6 +12,14 @@ public interface Callbacks {
 
     boolean fillRectangle(int x, int y, int width, int height, int rgb, int alpha);
 
+    boolean drawHorizontalLine(int x, int y, int width, int rgb);
+
+    boolean drawHorizontalLine(int x, int y, int width, int rgb, int alpha);
+
+    boolean drawVerticalLine(int x, int y, int height, int rgb);
+
+    boolean drawVerticalLine(int x, int y, int height, int rgb, int alpha);
+
     boolean drawSprite(Sprite sprite, int x, int y);
 
     boolean drawSprite(Sprite sprite, int x, int y, int alpha);
