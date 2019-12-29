@@ -58,6 +58,43 @@ public abstract class SpriteMixin implements Sprite {
         rs$drawScaledAlpha(x, y, width, height, alpha);
     }
 
+    @Copy("drawFast")
+    public abstract void rs$drawFast(int x, int y);
+
+    @Replace("drawFast")
+    public void hd$drawFast(int x, int y) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawSprite(this, x, y)) {
+            return;
+        }
+        rs$drawFast(x, y);
+    }
+
+    @Copy("drawFastScaled")
+    public abstract void rs$drawFastScaled(int x, int y, int width, int height);
+
+    @Replace("drawFastScaled")
+    public void hd$drawFastScaled(int x, int y, int width, int height) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawSprite(this, x, y, width, height)) {
+            return;
+        }
+        rs$drawFastScaled(x, y, width, height);
+    }
+
+    @Copy("drawColor")
+    public abstract void rs$drawColor(int x, int y, int alpha, int rgb);
+
+    @Replace("drawColor")
+    public void hd$drawColor(int x, int y, int alpha, int rgb) {
+        Callbacks callbacks = client.getCallbacks();
+        // TODO should alpha blend with the rgb arg
+        if (callbacks != null && callbacks.drawSprite(this, x, y, alpha)) {
+            return;
+        }
+        rs$drawColor(x, y, alpha, rgb);
+    }
+
     @Getter("pixels")
     @Override
     public abstract int[] getPixels();

@@ -252,6 +252,18 @@
         "drawScaledAlpha": {
           "name": "m",
           "desc": "(IIIII)V"
+        },
+        "drawFast": {
+          "name": "d",
+          "desc": "(II)V"
+        },
+        "drawFastScaled": {
+          "name": "ay",
+          "desc": "(IIII)V"
+        },
+        "drawColor": {
+          "name": "n",
+          "desc": "(IIII)V"
         }
       }
     },
