@@ -332,7 +332,16 @@
           "desc": "I"
         }
       },
-      "methods": {}
+      "methods": {
+        "draw": {
+          "name": "y",
+          "desc": "(II)V"
+        },
+        "drawScaled": {
+          "name": "p",
+          "desc": "(IIII)V"
+        }
+      }
     }
   }
 }

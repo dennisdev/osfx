@@ -458,6 +458,26 @@ public class Renderer implements Callbacks {
     }
 
     @Override
+    public boolean drawSprite(IndexedSprite sprite, int x, int y) {
+        return drawSprite(sprite, x, y, sprite.getWidth(), sprite.getHeight());
+    }
+
+    @Override
+    public boolean drawSprite(IndexedSprite sprite, int x, int y, int width, int height) {
+        byte[] palettePixels = sprite.getPixels();
+        int[] palette = sprite.getPalette();
+
+        int[] pixels = new int[palettePixels.length];
+        for (int i = 0; i < pixels.length; i++) {
+            int paletteIndex = palettePixels[i];
+            if (paletteIndex != 0) {
+                pixels[i] = 0xFF << 24 | palette[paletteIndex];
+            }
+        }
+        return drawSprite(sprite, pixels, x, y, width, height, 255);
+    }
+
+    @Override
     public boolean drawSprite(Sprite sprite, int x, int y) {
         return drawSprite(sprite, x, y, sprite.getWidth(), sprite.getHeight());
     }
@@ -474,6 +494,16 @@ public class Renderer implements Callbacks {
 
     @Override
     public boolean drawSprite(Sprite sprite, int x, int y, int width, int height, int alpha) {
+        int[] pixels = sprite.getPixels();
+        for (int i = 0; i < pixels.length; i++) {
+            if (pixels[i] != 0) {
+                pixels[i] |= 0xFF << 24;
+            }
+        }
+        return drawSprite(sprite, pixels, x, y, width, height, alpha);
+    }
+
+    private boolean drawSprite(AbstractSprite sprite, int[] pixels, int x, int y, int width, int height, int alpha) {
         if (!isBufferProviderPixels()) {
             return false;
         }
@@ -516,15 +546,10 @@ public class Renderer implements Callbacks {
 
         alpha = Math.min(alpha, 255);
 
-        int[] pixels = sprite.getPixels();
-        for (int i = 0; i < pixels.length; i++) {
-            if (pixels[i] != 0) {
-                pixels[i] |= 0xFF << 24;
-            }
-        }
         IntBuffer pixelsBuf = MemoryUtil.memAllocInt(pixels.length);
         pixelsBuf.put(pixels);
         pixelsBuf.flip();
+
         renderCommands.add(new RenderSpriteCommand(pixelsBuf, spriteWidth, spriteHeight, x, y, width, height, alpha,
                 getScissorX(), getScissorY(), getScissorWidth(), getScissorHeight()));
         return true;
