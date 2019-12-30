@@ -40,4 +40,6 @@ public interface Client extends GameEngine {
     int getViewportX();
 
     int getViewportY();
+
+    Widget getViewportWidget();
 }

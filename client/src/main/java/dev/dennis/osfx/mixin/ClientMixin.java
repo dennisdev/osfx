@@ -1,6 +1,7 @@
 package dev.dennis.osfx.mixin;
 
 import dev.dennis.osfx.api.AbstractFont;
+import dev.dennis.osfx.api.Widget;
 import dev.dennis.osfx.inject.mixin.*;
 import dev.dennis.osfx.Callbacks;
 import dev.dennis.osfx.api.BufferProvider;
@@ -177,4 +178,9 @@ public abstract class ClientMixin implements Client {
     @Getter("viewportY")
     @Override
     public abstract int getViewportY();
+
+    @Static
+    @Getter("viewportWidget")
+    @Override
+    public abstract Widget getViewportWidget();
 }

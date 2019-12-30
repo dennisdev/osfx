@@ -71,6 +71,11 @@
         "name": "lr",
         "desc": "I",
         "multiplier": -1679083747
+      },
+      "viewportWidget": {
+        "owner": "client",
+        "name": "mc",
+        "desc": "Lha;"
       }
     },
     "methods": {
