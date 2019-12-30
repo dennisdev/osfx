@@ -12,4 +12,6 @@ public interface Model {
     int getTriangleCount();
 
     int[] getIndicesA();
+
+    int[] getIndicesB();
 }
