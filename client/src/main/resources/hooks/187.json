@@ -357,7 +357,13 @@
     },
     "Widget": {
       "name": "ha",
-      "fields": {},
+      "fields": {
+        "width": {
+          "name": "aq",
+          "desc": "I",
+          "multiplier": 372029795
+        }
+      },
       "methods": {}
     }
   }
