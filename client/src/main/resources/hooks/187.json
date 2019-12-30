@@ -233,6 +233,10 @@
         "indicesB": {
           "name": "c",
           "desc": "[I"
+        },
+        "indicesC": {
+          "name": "o",
+          "desc": "[I"
         }
       },
       "methods": {

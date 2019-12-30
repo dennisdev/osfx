@@ -33,4 +33,8 @@ public abstract class ModelMixin implements Model {
     @Getter("indicesB")
     @Override
     public abstract int[] getIndicesB();
+
+    @Getter("indicesC")
+    @Override
+    public abstract int[] getIndicesC();
 }

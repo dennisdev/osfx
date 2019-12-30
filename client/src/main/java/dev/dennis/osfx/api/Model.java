@@ -14,4 +14,6 @@ public interface Model {
     int[] getIndicesA();
 
     int[] getIndicesB();
+
+    int[] getIndicesC();
 }
