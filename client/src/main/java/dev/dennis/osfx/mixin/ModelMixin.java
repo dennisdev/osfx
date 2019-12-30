@@ -21,4 +21,8 @@ public abstract class ModelMixin implements Model {
     @Getter("verticesZ")
     @Override
     public abstract int[] getVerticesZ();
+
+    @Getter("triangleCount")
+    @Override
+    public abstract int getTriangleCount();
 }

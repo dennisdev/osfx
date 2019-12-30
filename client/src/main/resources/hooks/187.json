@@ -221,6 +221,10 @@
         "verticesZ": {
           "name": "x",
           "desc": "[I"
+        },
+        "triangleCount": {
+          "name": "a",
+          "desc": "I"
         }
       },
       "methods": {

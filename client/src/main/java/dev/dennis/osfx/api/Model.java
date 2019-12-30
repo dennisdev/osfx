@@ -8,4 +8,6 @@ public interface Model {
     int[] getVerticesY();
 
     int[] getVerticesZ();
+
+    int getTriangleCount();
 }
