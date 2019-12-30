@@ -237,6 +237,10 @@
         "indicesC": {
           "name": "o",
           "desc": "[I"
+        },
+        "colorsA": {
+          "name": "v",
+          "desc": "[I"
         }
       },
       "methods": {
