@@ -225,6 +225,10 @@
         "triangleCount": {
           "name": "a",
           "desc": "I"
+        },
+        "indicesA": {
+          "name": "d",
+          "desc": "[I"
         }
       },
       "methods": {

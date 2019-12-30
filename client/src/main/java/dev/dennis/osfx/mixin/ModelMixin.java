@@ -25,4 +25,8 @@ public abstract class ModelMixin implements Model {
     @Getter("triangleCount")
     @Override
     public abstract int getTriangleCount();
+
+    @Getter("indicesA")
+    @Override
+    public abstract int[] getIndicesA();
 }

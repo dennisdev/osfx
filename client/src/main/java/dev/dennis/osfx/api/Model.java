@@ -10,4 +10,6 @@ public interface Model {
     int[] getVerticesZ();
 
     int getTriangleCount();
+
+    int[] getIndicesA();
 }
