@@ -205,7 +205,12 @@
     },
     "Model": {
       "name": "dw",
-      "fields": {},
+      "fields": {
+        "verticesX": {
+          "name": "b",
+          "desc": "[I"
+        }
+      },
       "methods": {
         "draw": {
           "name": "ch",
