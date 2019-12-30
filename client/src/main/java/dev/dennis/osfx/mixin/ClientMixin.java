@@ -167,4 +167,9 @@ public abstract class ClientMixin implements Client {
     @Getter("graphicsPixels")
     @Override
     public abstract int[] getGraphicsPixels();
+
+    @Static
+    @Getter("viewportX")
+    @Override
+    public abstract int getViewportX();
 }

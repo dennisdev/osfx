@@ -59,6 +59,12 @@
         "owner": "lj",
         "name": "av",
         "desc": "[I"
+      },
+      "viewportX": {
+        "owner": "client",
+        "name": "ln",
+        "desc": "I",
+        "multiplier": 981856147
       }
     },
     "methods": {

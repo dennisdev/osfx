@@ -36,4 +36,6 @@ public interface Client extends GameEngine {
     int getScissorHeight();
 
     int[] getGraphicsPixels();
+
+    int getViewportX();
 }
