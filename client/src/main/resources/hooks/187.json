@@ -206,6 +206,10 @@
     "Model": {
       "name": "dw",
       "fields": {
+        "vertexCount": {
+          "name": "p",
+          "desc": "I"
+        },
         "verticesX": {
           "name": "b",
           "desc": "[I"
