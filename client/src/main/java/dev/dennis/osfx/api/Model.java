@@ -20,4 +20,6 @@ public interface Model {
     int[] getColorsA();
 
     int[] getColorsB();
+
+    int[] getColorsC();
 }

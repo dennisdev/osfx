@@ -45,4 +45,8 @@ public abstract class ModelMixin implements Model {
     @Getter("colorsB")
     @Override
     public abstract int[] getColorsB();
+
+    @Getter("colorsC")
+    @Override
+    public abstract int[] getColorsC();
 }
