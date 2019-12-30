@@ -4,4 +4,6 @@ public interface Model {
     int[] getVerticesX();
 
     int[] getVerticesY();
+
+    int[] getVerticesZ();
 }

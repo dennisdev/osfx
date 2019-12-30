@@ -13,4 +13,8 @@ public abstract class ModelMixin implements Model {
     @Getter("verticesY")
     @Override
     public abstract int[] getVerticesY();
+
+    @Getter("verticesZ")
+    @Override
+    public abstract int[] getVerticesZ();
 }
