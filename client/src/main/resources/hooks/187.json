@@ -354,6 +354,11 @@
           "desc": "(IIII)V"
         }
       }
+    },
+    "Widget": {
+      "name": "ha",
+      "fields": {},
+      "methods": {}
     }
   }
 }
