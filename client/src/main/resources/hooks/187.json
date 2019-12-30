@@ -65,6 +65,12 @@
         "name": "ln",
         "desc": "I",
         "multiplier": 981856147
+      },
+      "viewportY": {
+        "owner": "client",
+        "name": "lr",
+        "desc": "I",
+        "multiplier": -1679083747
       }
     },
     "methods": {

@@ -172,4 +172,9 @@ public abstract class ClientMixin implements Client {
     @Getter("viewportX")
     @Override
     public abstract int getViewportX();
+
+    @Static
+    @Getter("viewportY")
+    @Override
+    public abstract int getViewportY();
 }

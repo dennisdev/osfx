@@ -38,4 +38,6 @@ public interface Client extends GameEngine {
     int[] getGraphicsPixels();
 
     int getViewportX();
+
+    int getViewportY();
 }
