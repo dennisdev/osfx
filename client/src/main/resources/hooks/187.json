@@ -209,6 +209,10 @@
         "verticesX": {
           "name": "b",
           "desc": "[I"
+        },
+        "verticesY": {
+          "name": "e",
+          "desc": "[I"
         }
       },
       "methods": {
