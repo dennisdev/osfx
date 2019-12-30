@@ -9,4 +9,8 @@ public abstract class WidgetMixin implements Widget {
     @Getter("width")
     @Override
     public abstract int getWidth();
+
+    @Getter("height")
+    @Override
+    public abstract int getHeight();
 }
