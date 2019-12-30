@@ -241,6 +241,10 @@
         "colorsA": {
           "name": "v",
           "desc": "[I"
+        },
+        "colorsB": {
+          "name": "k",
+          "desc": "[I"
         }
       },
       "methods": {
