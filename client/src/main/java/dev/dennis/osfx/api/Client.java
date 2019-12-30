@@ -42,4 +42,6 @@ public interface Client extends GameEngine {
     int getViewportY();
 
     Widget getViewportWidget();
+
+    int[] getColorPalette();
 }

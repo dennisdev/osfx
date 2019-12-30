@@ -76,6 +76,11 @@
         "owner": "client",
         "name": "mc",
         "desc": "Lha;"
+      },
+      "colorPalette": {
+        "owner": "et",
+        "name": "h",
+        "desc": "[I"
       }
     },
     "methods": {

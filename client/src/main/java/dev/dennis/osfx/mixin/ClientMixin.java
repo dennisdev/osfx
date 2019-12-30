@@ -183,4 +183,9 @@ public abstract class ClientMixin implements Client {
     @Getter("viewportWidget")
     @Override
     public abstract Widget getViewportWidget();
+
+    @Static
+    @Getter("colorPalette")
+    @Override
+    public abstract int[] getColorPalette();
 }
