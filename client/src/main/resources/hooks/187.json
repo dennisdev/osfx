@@ -35,6 +35,12 @@
         "desc": "I",
         "multiplier": -1174260245
       },
+      "cameraX": {
+        "owner": "gt",
+        "name": "hx",
+        "desc": "I",
+        "multiplier": -1785627297
+      },
       "scissorX": {
         "owner": "lj",
         "name": "ah",
