@@ -41,6 +41,12 @@
         "desc": "I",
         "multiplier": -1785627297
       },
+      "cameraY": {
+        "owner": "eg",
+        "name": "hg",
+        "desc": "I",
+        "multiplier": -864409125
+      },
       "scissorX": {
         "owner": "lj",
         "name": "ah",
