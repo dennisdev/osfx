@@ -145,6 +145,11 @@ public abstract class ClientMixin implements Client {
     public abstract int getCameraY();
 
     @Static
+    @Getter("cameraZ")
+    @Override
+    public abstract int getCameraZ();
+
+    @Static
     @Getter("scissorX")
     @Override
     public abstract int getScissorX();

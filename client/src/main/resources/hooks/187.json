@@ -47,6 +47,12 @@
         "desc": "I",
         "multiplier": -864409125
       },
+      "cameraZ": {
+        "owner": "by",
+        "name": "ha",
+        "desc": "I",
+        "multiplier": -1555429919
+      },
       "scissorX": {
         "owner": "lj",
         "name": "ah",
