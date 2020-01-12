@@ -1,11 +1,29 @@
 package dev.dennis.osfx.mixin;
 
-import dev.dennis.osfx.inject.mixin.Getter;
-import dev.dennis.osfx.inject.mixin.Mixin;
+import dev.dennis.osfx.Callbacks;
+import dev.dennis.osfx.api.Client;
+import dev.dennis.osfx.inject.mixin.*;
 import dev.dennis.osfx.api.Model;
 
 @Mixin("Model")
 public abstract class ModelMixin implements Model {
+    @Shadow
+    private static Client client;
+
+    @Copy("draw")
+    public abstract void rs$draw(int rotation, int pitchSin, int pitchCos, int yawSin, int yawCos, int x, int y, int z,
+                                 long hash);
+
+    @Replace("draw")
+    public void hd$draw(int rotation, int pitchSin, int pitchCos, int yawSin, int yawCos, int x, int y, int z,
+                        long hash) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawModel(this, rotation, x, y, z)) {
+            return;
+        }
+        rs$draw(rotation, pitchSin, pitchCos, yawSin, yawCos, x, y, z, hash);
+    }
+
     @Getter("vertexCount")
     @Override
     public abstract int getVertexCount();

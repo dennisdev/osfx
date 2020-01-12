@@ -45,7 +45,7 @@ public class RenderRectangleCommand implements RenderCommand {
         bgfx_encoder_set_texture(encoder, 0, (short) 0, renderer.getWhiteTextureId(), BGFX_SAMPLER_NONE);
         long state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA;
         bgfx_encoder_set_state(encoder, state, 0);
-        renderer.renderQuad(encoder, 1, renderer.getQuadProgram(), x, y, width, height, rgb, alpha);
+        renderer.renderQuad(encoder, Renderer.UI_VIEW, renderer.getQuadProgram(), x, y, width, height, rgb, alpha);
     }
 
     @Override

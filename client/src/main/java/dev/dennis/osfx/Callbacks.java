@@ -2,6 +2,7 @@ package dev.dennis.osfx;
 
 import dev.dennis.osfx.api.AbstractFont;
 import dev.dennis.osfx.api.IndexedSprite;
+import dev.dennis.osfx.api.Model;
 import dev.dennis.osfx.api.Sprite;
 
 public interface Callbacks {
@@ -36,4 +37,6 @@ public interface Callbacks {
     boolean drawGlyph(AbstractFont font, byte[] glyph, int x, int y, int width, int height, int rgb);
 
     boolean drawGlyph(AbstractFont font, byte[] glyph, int x, int y, int width, int height, int rgb, int alpha);
+
+    boolean drawModel(Model model, int rotation, int x, int y, int z);
 }

@@ -1,10 +1,7 @@
 package dev.dennis.osfx;
 
 import dev.dennis.osfx.api.*;
-import dev.dennis.osfx.render.RenderCommand;
-import dev.dennis.osfx.render.RenderGlyphCommand;
-import dev.dennis.osfx.render.RenderRectangleCommand;
-import dev.dennis.osfx.render.RenderSpriteCommand;
+import dev.dennis.osfx.render.*;
 import dev.dennis.osfx.util.KeyMapping;
 import dev.dennis.osfx.util.OsrsAppletStub;
 import dev.dennis.osfx.util.OsrsConfig;
@@ -55,6 +52,30 @@ public class Renderer implements Callbacks {
 
     private static final int DRAW_FULL_MODE = 2;
 
+    private static final float PI = (float) Math.PI;
+
+    private static final float TAU = PI * 2f;
+
+    private static final float SHORT_TO_RADIANS = TAU / 65536.0f;
+
+    private static final float SHORT_TO_DEGREES = 360f / 65536.0f;
+
+    private static final float DEGREES_TO_RADIANS = TAU / 360.0f;
+
+    private static final float RS_TO_RADIANS = TAU / 2048.0f;
+
+    private static final float NEAR = 50f;
+
+    private static final float FAR = 3584f;
+
+    private static final float DEFAULT_ZOOM = 25.0f / 256.0f;
+
+    public static final int BACKGROUND_VIEW = 0;
+
+    public static final int UI_VIEW = 1;
+
+    public static final int SCENE_VIEW = 2;
+
     private final Client client;
 
     private final CyclicBarrier barrier;
@@ -81,6 +102,8 @@ public class Renderer implements Callbacks {
 
     private final List<RenderCommand> renderCommands;
 
+    private final List<RenderModelCommand> renderModelCommands;
+
     private Dimension lastCanvasSize;
 
     private IntBuffer fullscreenTextureBuf;
@@ -95,9 +118,15 @@ public class Renderer implements Callbacks {
 
     private short whiteTextureId;
 
-    private FloatBuffer orthoBuf;
+    private FloatBuffer matrixBuf;
 
-    private final Matrix4f ortho;
+    private final Matrix4f matrix;
+
+    private short frameBufferId;
+
+    private int lastViewportWidth;
+
+    private int lastViewportHeight;
 
     private static boolean isPointOnCanvas(Canvas canvas, int x, int y) {
         return x >= canvas.getX() && y >= canvas.getY()
@@ -116,9 +145,11 @@ public class Renderer implements Callbacks {
         this.buffersToRemove = new ArrayList<>();
         this.texturesToRemove = new ArrayList<>();
         this.renderCommands = new ArrayList<>();
+        this.renderModelCommands = new ArrayList<>();
         this.fullscreenTextureId = -1;
         this.whiteTextureId = -1;
-        this.ortho = new Matrix4f();
+        this.matrix = new Matrix4f();
+        this.frameBufferId = -1;
     }
 
     private void startClient(OsrsConfig config) {
@@ -235,13 +266,19 @@ public class Renderer implements Callbacks {
             bgfx_set_debug(BGFX_DEBUG_TEXT | BGFX_DEBUG_STATS);
         }
 
-        bgfx_set_view_clear(0,
+        bgfx_set_view_clear(BACKGROUND_VIEW,
                 BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
                 0x000000FF,
                 1.0f,
                 0);
 
-        bgfx_set_view_clear(1,
+        bgfx_set_view_clear(UI_VIEW,
+                BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
+                0x000000FF,
+                1.0f,
+                0);
+
+        bgfx_set_view_clear(SCENE_VIEW,
                 BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
                 0x000000FF,
                 1.0f,
@@ -261,7 +298,7 @@ public class Renderer implements Callbacks {
 
         layout = createVertexLayout(false, true, true);
 
-        orthoBuf = MemoryUtil.memAllocFloat(16);
+        matrixBuf = MemoryUtil.memAllocFloat(16);
     }
 
     private void destroy() {
@@ -284,7 +321,7 @@ public class Renderer implements Callbacks {
     private void destroyBgfx() {
         MemoryUtil.memFree(fullscreenTextureBuf);
         MemoryUtil.memFree(whiteTextureBuf);
-        MemoryUtil.memFree(orthoBuf);
+        MemoryUtil.memFree(matrixBuf);
 
         layout.free();
 
@@ -304,13 +341,6 @@ public class Renderer implements Callbacks {
         // Start of frame
         glfwPollEvents();
 
-        bgfx_dbg_text_clear(0, false);
-
-        Canvas canvas = client.getCanvas();
-
-        bgfx_set_view_rect(0, 0, 0, width, height);
-        bgfx_set_view_rect(1, canvas.getX(), canvas.getY(), width, height);
-
         for (Buffer buf : buffersToRemove) {
             MemoryUtil.memFree(buf);
         }
@@ -326,6 +356,11 @@ public class Renderer implements Callbacks {
         }
         renderCommands.clear();
 
+        for (RenderModelCommand command : renderModelCommands) {
+            buffersToRemove.add(command.getVertexBuffer());
+        }
+        renderModelCommands.clear();
+
         sync();
 
         // Client is drawing
@@ -333,9 +368,17 @@ public class Renderer implements Callbacks {
         sync();
 
         // End of frame
-        ortho.setOrthoLH(0.0f, width, height, 0.0f, 0.0f, 1.0f, !bgfxCaps.homogeneousDepth());
-        ortho.get(orthoBuf);
-        bgfx_set_view_transform(1, null, orthoBuf);
+
+        bgfx_dbg_text_clear(0, false);
+
+        Canvas canvas = client.getCanvas();
+
+        bgfx_set_view_rect(BACKGROUND_VIEW, 0, 0, width, height);
+        bgfx_set_view_rect(UI_VIEW, canvas.getX(), canvas.getY(), width, height);
+
+        matrix.setOrthoLH(0.0f, width, height, 0.0f, 0.0f, 1.0f, !bgfxCaps.homogeneousDepth());
+        matrix.get(matrixBuf);
+        bgfx_set_view_transform(UI_VIEW, null, matrixBuf);
 
         long encoder = bgfx_encoder_begin(false);
 
@@ -345,13 +388,110 @@ public class Renderer implements Callbacks {
             command.render(this, encoder);
         }
 
+        Widget viewportWidget = client.getViewportWidget();
+        if (viewportWidget != null) {
+            int viewportWidth = viewportWidget.getWidth();
+            int viewportHeight = viewportWidget.getHeight();
+            if (frameBufferId == -1 || lastViewportWidth != viewportWidth || lastViewportHeight != viewportHeight) {
+                if (frameBufferId != -1) {
+                    bgfx_destroy_frame_buffer(frameBufferId);
+                }
+                short[] attachments = new short[2];
+
+                attachments[0] = bgfx_create_texture_2d(viewportWidth, viewportHeight, false, 1,
+                        BGFX_TEXTURE_FORMAT_RGBA32F, BGFX_TEXTURE_RT, null);
+                attachments[1] = bgfx_create_texture_2d(viewportWidth, viewportHeight, false, 1,
+                        BGFX_TEXTURE_FORMAT_D16, BGFX_TEXTURE_RT_WRITE_ONLY, null);
+
+                frameBufferId = bgfx_create_frame_buffer_from_handles(attachments, true);
+
+                lastViewportWidth = viewportWidth;
+                lastViewportHeight = viewportHeight;
+            }
+            bgfx_set_view_frame_buffer(SCENE_VIEW, frameBufferId);
+            bgfx_set_view_rect(SCENE_VIEW, 0, 0, viewportWidth, viewportHeight);
+
+            int centerX = viewportWidth / 2;
+            int centerY = viewportHeight / 2;
+            int pitch = client.getCameraPitch();
+            int yaw = client.getCameraYaw();
+            int zoom = client.getCameraZoom();
+            setFrustumMatrix(0, 0, centerX, centerY, viewportWidth, viewportHeight,
+                    pitch, yaw, zoom);
+
+            bgfx_set_view_transform(SCENE_VIEW, null, matrix.get(matrixBuf));
+
+            short frameBufferTextureId = bgfx_get_texture(frameBufferId, 0);
+
+            bgfx_encoder_set_scissor(encoder, 0, 0, width, height);
+
+            for (RenderModelCommand command : renderModelCommands) {
+                ByteBuffer vertexBuffer = command.getVertexBuffer();
+                int vertexCount = command.getVertexCount();
+
+                matrix.identity().translate(command.getX(), command.getY(), command.getZ())
+                    .rotateY(command.getRotation() * RS_TO_RADIANS);
+
+                bgfx_encoder_set_transform(encoder, matrix.get(matrixBuf));
+                bgfx_encoder_set_state(encoder, BGFX_STATE_DEFAULT, 0);
+                bgfx_encoder_set_texture(encoder, 0, (short) 0, whiteTextureId, BGFX_SAMPLER_NONE);
+
+                try (MemoryStack stack = MemoryStack.stackPush()) {
+                    BGFXTransientVertexBuffer tvb = BGFXTransientVertexBuffer.callocStack(stack);
+                    bgfx_alloc_transient_vertex_buffer(tvb, vertexCount, layout);
+
+                    int remaining = tvb.data().remaining();
+                    if (remaining != vertexBuffer.limit()) {
+                        continue;
+                    }
+                    tvb.data().put(vertexBuffer)
+                            .flip();
+
+                    bgfx_encoder_set_transient_vertex_buffer(encoder, 0, tvb, 0, vertexCount,
+                                BGFX_INVALID_HANDLE);
+                    bgfx_encoder_submit(encoder, SCENE_VIEW, quadProgram, 0, false);
+                }
+            }
+
+            long state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA;
+            bgfx_encoder_set_texture(encoder, 0, (short) 0, frameBufferTextureId, BGFX_SAMPLER_NONE);
+            bgfx_encoder_set_state(encoder, state, 0);
+            if (bgfxCaps.originBottomLeft()) {
+                renderQuad(encoder, UI_VIEW, quadProgram, client.getViewportX(), client.getViewportY(),
+                        viewportWidth, viewportHeight, 0xFFFFFF, 0xFF, 0.0f, 1.0f, 1.0f, 0.0f);
+            } else {
+                renderQuad(encoder, UI_VIEW, quadProgram, client.getViewportX(), client.getViewportY(),
+                        viewportWidth, viewportHeight, 0xFFFFFF, 0xFF);
+            }
+        }
+
         bgfx_encoder_end(encoder);
 
-        bgfx_touch(0);
-        bgfx_touch(1);
+        bgfx_touch(BACKGROUND_VIEW);
+        bgfx_touch(UI_VIEW);
+        bgfx_touch(SCENE_VIEW);
 
         bgfx_frame(false);
         sync();
+    }
+
+    private Matrix4f setFrustumMatrix(int offsetX, int offsetY, int centerX, int centerY, int width, int height,
+                                      int pitch, int yaw, int zoom) {
+        int left = (offsetX - centerX << 9) / zoom;
+        int right = (offsetX + width - centerX << 9) / zoom;
+        int top = (offsetY - centerY << 9) / zoom;
+        int bottom = (offsetY + height - centerY << 9) / zoom;
+
+        matrix.setFrustum(left * DEFAULT_ZOOM, right * DEFAULT_ZOOM, -bottom * DEFAULT_ZOOM,
+                -top * DEFAULT_ZOOM, NEAR, FAR)
+                .rotateX(PI);
+        if (pitch != 0) {
+            matrix.rotateX(pitch * RS_TO_RADIANS);
+        }
+        if (yaw != 0) {
+            matrix.rotateY(yaw * RS_TO_RADIANS);
+        }
+        return matrix;
     }
 
     private void renderFullscreenTexture(long encoder) {
@@ -361,7 +501,7 @@ public class Renderer implements Callbacks {
 
         bgfx_encoder_set_texture(encoder, 0, (short) 0, fullscreenTextureId, BGFX_SAMPLER_NONE);
         bgfx_encoder_set_state(encoder, BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A, 0);
-        renderQuad(encoder, 1, quadProgram, 0, 0, canvas.getWidth(), canvas.getHeight(),
+        renderQuad(encoder, UI_VIEW, quadProgram, 0, 0, canvas.getWidth(), canvas.getHeight(),
                 0xFFFFFF, 255);
     }
 
@@ -571,6 +711,77 @@ public class Renderer implements Callbacks {
         int glyphId = font.getGlyphIdMap().get(glyph);
         renderCommands.add(new RenderGlyphCommand(font, glyphId, x, y, width, height, rgb, alpha,
                 getScissorX(), getScissorY(), getScissorWidth(), getScissorHeight()));
+        return true;
+    }
+
+    @Override
+    public boolean drawModel(Model model, int rotation, int x, int y, int z) {
+        int[] verticesX = model.getVerticesX();
+        int[] verticesY = model.getVerticesY();
+        int[] verticesZ = model.getVerticesZ();
+
+        int[] indicesA = model.getIndicesA();
+        int[] indicesB = model.getIndicesB();
+        int[] indicesC = model.getIndicesC();
+
+        int[] colorsA = model.getColorsA();
+        int[] colorsB = model.getColorsB();
+        int[] colorsC = model.getColorsC();
+
+        int[] colorPalette = client.getColorPalette();
+
+        ByteBuffer vertex = MemoryUtil.memAlloc(model.getTriangleCount() * 3 * 6 * 4);
+        for (int i = 0; i < model.getTriangleCount(); i++) {
+            int colorA = colorsA[i];
+            int colorB = colorsB[i];
+            int colorC = colorsC[i];
+            int alpha = 0xFF;
+
+            if (colorC == -1) {
+                colorC = colorB = colorA;
+            } else if (colorC == -2) {
+                colorC = colorB = colorA = 0;
+                alpha = 0;
+            }
+
+            int rgb = colorPalette[colorA];
+            int r = rgb >> 16 & 0xFF;
+            int g = rgb >> 8 & 0xFF;
+            int b = rgb & 0xFF;
+
+            vertex.putFloat(verticesX[indicesA[i]]);
+            vertex.putFloat(verticesY[indicesA[i]]);
+            vertex.putFloat(verticesZ[indicesA[i]]);
+            vertex.putInt(alpha << 24 | b << 16 | g << 8 | r);
+            vertex.putFloat(0.0f);
+            vertex.putFloat(1.0f);
+
+            rgb = colorPalette[colorB];
+            r = rgb >> 16 & 0xFF;
+            g = rgb >> 8 & 0xFF;
+            b = rgb & 0xFF;
+
+            vertex.putFloat(verticesX[indicesB[i]]);
+            vertex.putFloat(verticesY[indicesB[i]]);
+            vertex.putFloat(verticesZ[indicesB[i]]);
+            vertex.putInt(alpha << 24 | b << 16 | g << 8 | r);
+            vertex.putFloat(1.0f);
+            vertex.putFloat(1.0f);
+
+            rgb = colorPalette[colorC];
+            r = rgb >> 16 & 0xFF;
+            g = rgb >> 8 & 0xFF;
+            b = rgb & 0xFF;
+
+            vertex.putFloat(verticesX[indicesC[i]]);
+            vertex.putFloat(verticesY[indicesC[i]]);
+            vertex.putFloat(verticesZ[indicesC[i]]);
+            vertex.putInt(alpha << 24 | b << 16 | g << 8 | r);
+            vertex.putFloat(0.0f);
+            vertex.putFloat(0.0f);
+        }
+        vertex.flip();
+        renderModelCommands.add(new RenderModelCommand(model, rotation, x, y, z, vertex, model.getTriangleCount() * 3));
         return true;
     }
 
