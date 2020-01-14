@@ -255,10 +255,6 @@ public class Renderer implements Callbacks {
             bgfx_frame(false);
 
             destroy();
-
-            // For some reason the AWT thread keeps running which prevents this process from stopping
-            // So we exit manually
-            System.exit(0);
         }
     }
 
