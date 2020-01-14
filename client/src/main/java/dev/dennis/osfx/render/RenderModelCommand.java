@@ -15,17 +15,17 @@ public class RenderModelCommand {
 
     private final int z;
 
-    private final ByteBuffer vertexBuffer;
+    private final int vertexStart;
 
     private final int vertexCount;
 
-    public RenderModelCommand(Model model, int rotation, int x, int y, int z, ByteBuffer vertexBuffer, int vertexCount) {
+    public RenderModelCommand(Model model, int rotation, int x, int y, int z, int vertexStart, int vertexCount) {
         this.model = model;
         this.rotation = rotation;
         this.x = x;
         this.y = y;
         this.z = z;
-        this.vertexBuffer = vertexBuffer;
+        this.vertexStart = vertexStart;
         this.vertexCount = vertexCount;
     }
 
@@ -49,8 +49,8 @@ public class RenderModelCommand {
         return z;
     }
 
-    public ByteBuffer getVertexBuffer() {
-        return vertexBuffer;
+    public int getVertexStart() {
+        return vertexStart;
     }
 
     public int getVertexCount() {

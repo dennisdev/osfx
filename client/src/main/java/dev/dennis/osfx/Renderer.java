@@ -68,7 +68,7 @@ public class Renderer implements Callbacks {
 
     private static final float NEAR = 50f;
 
-    private static final float FAR = 3584f;
+    private static final float FAR = 4000f;
 
     private static final float DEFAULT_ZOOM = 25.0f / 256.0f;
 
@@ -98,9 +98,13 @@ public class Renderer implements Callbacks {
 
     private int lastMouseY;
 
+    private int frame;
+
     private final List<Buffer> buffersToRemove;
 
     private final List<Short> texturesToRemove;
+
+    private final List<Short> vertexBuffersToRemove;
 
     private final List<RenderCommand> renderCommands;
 
@@ -129,6 +133,12 @@ public class Renderer implements Callbacks {
     private int lastViewportWidth;
 
     private int lastViewportHeight;
+
+    private final ByteBuffer[] vertexBuffers;
+
+    private short vertexBufferId;
+
+    private int vertexCount;
 
     private static boolean isPointOnCanvas(Canvas canvas, int x, int y) {
         return x >= canvas.getX() && y >= canvas.getY()
@@ -202,12 +212,15 @@ public class Renderer implements Callbacks {
         this.height = height;
         this.buffersToRemove = new ArrayList<>();
         this.texturesToRemove = new ArrayList<>();
+        this.vertexBuffersToRemove = new ArrayList<>();
         this.renderCommands = new ArrayList<>();
         this.renderModelCommands = new ArrayList<>();
         this.fullscreenTextureId = -1;
         this.whiteTextureId = -1;
         this.matrix = new Matrix4f();
         this.frameBufferId = -1;
+        this.vertexBufferId = -1;
+        this.vertexBuffers = new ByteBuffer[2];
     }
 
     private void startClient(OsrsConfig config) {
@@ -358,6 +371,11 @@ public class Renderer implements Callbacks {
         layout = createVertexLayout(false, true, true);
 
         matrixBuf = MemoryUtil.memAllocFloat(16);
+
+        int initialTriangleCount = 2 << 17;
+        for (int i = 0; i < vertexBuffers.length; i++) {
+            vertexBuffers[i] = MemoryUtil.memAlloc(initialTriangleCount * 3 * layout.stride());
+        }
     }
 
     private void destroy() {
@@ -410,15 +428,20 @@ public class Renderer implements Callbacks {
         }
         texturesToRemove.clear();
 
+        for (short id : vertexBuffersToRemove) {
+            bgfx_destroy_vertex_buffer(id);
+        }
+        vertexBuffersToRemove.clear();
+
         for (RenderCommand command : renderCommands) {
             command.cleanup(this);
         }
         renderCommands.clear();
 
-        for (RenderModelCommand command : renderModelCommands) {
-            buffersToRemove.add(command.getVertexBuffer());
-        }
         renderModelCommands.clear();
+
+        vertexBuffers[frame % 2].clear();
+        vertexCount = 0;
 
         sync();
 
@@ -484,32 +507,30 @@ public class Renderer implements Callbacks {
 
             bgfx_encoder_set_scissor(encoder, 0, 0, width, height);
 
+            if (vertexBufferId != -1) {
+                vertexBuffersToRemove.add(vertexBufferId);
+            }
+
+            ByteBuffer vertexBuffer = vertexBuffers[frame % 2];
+            vertexBuffer.flip();
+            vertexBufferId = bgfx_create_vertex_buffer(bgfx_make_ref(vertexBuffer), layout, 0);
+
             for (RenderModelCommand command : renderModelCommands) {
-                ByteBuffer vertexBuffer = command.getVertexBuffer();
-                int vertexCount = command.getVertexCount();
+                if (command.getVertexCount() == 0) {
+                    continue;
+                }
 
                 matrix.identity().translate(command.getX(), command.getY(), command.getZ())
                     .rotateY(command.getRotation() * RS_TO_RADIANS);
-
                 bgfx_encoder_set_transform(encoder, matrix.get(matrixBuf));
+
+                bgfx_encoder_set_vertex_buffer(encoder, 0, vertexBufferId, command.getVertexStart(),
+                        command.getVertexCount(), BGFX_INVALID_HANDLE);
+
                 bgfx_encoder_set_state(encoder, BGFX_STATE_DEFAULT, 0);
                 bgfx_encoder_set_texture(encoder, 0, (short) 0, whiteTextureId, BGFX_SAMPLER_NONE);
 
-                try (MemoryStack stack = MemoryStack.stackPush()) {
-                    BGFXTransientVertexBuffer tvb = BGFXTransientVertexBuffer.callocStack(stack);
-                    bgfx_alloc_transient_vertex_buffer(tvb, vertexCount, layout);
-
-                    int remaining = tvb.data().remaining();
-                    if (remaining != vertexBuffer.limit()) {
-                        continue;
-                    }
-                    tvb.data().put(vertexBuffer)
-                            .flip();
-
-                    bgfx_encoder_set_transient_vertex_buffer(encoder, 0, tvb, 0, vertexCount,
-                                BGFX_INVALID_HANDLE);
-                    bgfx_encoder_submit(encoder, SCENE_VIEW, quadProgram, 0, false);
-                }
+                bgfx_encoder_submit(encoder, SCENE_VIEW, quadProgram, 0, false);
             }
 
             long state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA;
@@ -530,7 +551,8 @@ public class Renderer implements Callbacks {
         bgfx_touch(UI_VIEW);
         bgfx_touch(SCENE_VIEW);
 
-        bgfx_frame(false);
+        frame = bgfx_frame(false);
+
         sync();
     }
 
@@ -789,7 +811,22 @@ public class Renderer implements Callbacks {
 
         int[] colorPalette = client.getColorPalette();
 
-        ByteBuffer vertex = MemoryUtil.memAlloc(model.getTriangleCount() * 3 * 6 * 4);
+        int modelVertexCount = model.getTriangleCount() * 3;
+
+        ByteBuffer vertexBuf = vertexBuffers[frame % 2];
+
+        if (vertexBuf.remaining() < modelVertexCount * layout.stride()) {
+            vertexBuf.flip();
+            ByteBuffer newBuffer = MemoryUtil.memAlloc(vertexBuf.capacity() * 2);
+            newBuffer.put(vertexBuf);
+            buffersToRemove.add(vertexBuf);
+            vertexBuf = vertexBuffers[frame % 2] = newBuffer;
+            System.out.println("new buffer: " + vertexBuf.capacity());
+        }
+
+        int vertexStart = vertexCount;
+        vertexCount += modelVertexCount;
+
         for (int i = 0; i < model.getTriangleCount(); i++) {
             int colorA = colorsA[i];
             int colorB = colorsB[i];
@@ -808,39 +845,38 @@ public class Renderer implements Callbacks {
             int g = rgb >> 8 & 0xFF;
             int b = rgb & 0xFF;
 
-            vertex.putFloat(verticesX[indicesA[i]]);
-            vertex.putFloat(verticesY[indicesA[i]]);
-            vertex.putFloat(verticesZ[indicesA[i]]);
-            vertex.putInt(alpha << 24 | b << 16 | g << 8 | r);
-            vertex.putFloat(0.0f);
-            vertex.putFloat(1.0f);
+            vertexBuf.putFloat(verticesX[indicesA[i]]);
+            vertexBuf.putFloat(verticesY[indicesA[i]]);
+            vertexBuf.putFloat(verticesZ[indicesA[i]]);
+            vertexBuf.putInt(alpha << 24 | b << 16 | g << 8 | r);
+            vertexBuf.putFloat(0.0f);
+            vertexBuf.putFloat(1.0f);
 
             rgb = colorPalette[colorB];
             r = rgb >> 16 & 0xFF;
             g = rgb >> 8 & 0xFF;
             b = rgb & 0xFF;
 
-            vertex.putFloat(verticesX[indicesB[i]]);
-            vertex.putFloat(verticesY[indicesB[i]]);
-            vertex.putFloat(verticesZ[indicesB[i]]);
-            vertex.putInt(alpha << 24 | b << 16 | g << 8 | r);
-            vertex.putFloat(1.0f);
-            vertex.putFloat(1.0f);
+            vertexBuf.putFloat(verticesX[indicesB[i]]);
+            vertexBuf.putFloat(verticesY[indicesB[i]]);
+            vertexBuf.putFloat(verticesZ[indicesB[i]]);
+            vertexBuf.putInt(alpha << 24 | b << 16 | g << 8 | r);
+            vertexBuf.putFloat(1.0f);
+            vertexBuf.putFloat(1.0f);
 
             rgb = colorPalette[colorC];
             r = rgb >> 16 & 0xFF;
             g = rgb >> 8 & 0xFF;
             b = rgb & 0xFF;
 
-            vertex.putFloat(verticesX[indicesC[i]]);
-            vertex.putFloat(verticesY[indicesC[i]]);
-            vertex.putFloat(verticesZ[indicesC[i]]);
-            vertex.putInt(alpha << 24 | b << 16 | g << 8 | r);
-            vertex.putFloat(0.0f);
-            vertex.putFloat(0.0f);
+            vertexBuf.putFloat(verticesX[indicesC[i]]);
+            vertexBuf.putFloat(verticesY[indicesC[i]]);
+            vertexBuf.putFloat(verticesZ[indicesC[i]]);
+            vertexBuf.putInt(alpha << 24 | b << 16 | g << 8 | r);
+            vertexBuf.putFloat(0.0f);
+            vertexBuf.putFloat(0.0f);
         }
-        vertex.flip();
-        renderModelCommands.add(new RenderModelCommand(model, rotation, x, y, z, vertex, model.getTriangleCount() * 3));
+        renderModelCommands.add(new RenderModelCommand(model, rotation, x, y, z, vertexStart, modelVertexCount));
         return true;
     }
 
