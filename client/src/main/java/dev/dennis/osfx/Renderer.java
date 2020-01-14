@@ -14,6 +14,7 @@ import org.lwjgl.glfw.GLFWNativeX11;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.system.Platform;
+import org.lwjgl.system.libc.LibCStdio;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -29,7 +30,8 @@ import static org.lwjgl.bgfx.BGFXPlatform.bgfx_set_platform_data;
 import static org.lwjgl.glfw.Callbacks.glfwFreeCallbacks;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.glfw.GLFW.glfwTerminate;
-import static org.lwjgl.system.MemoryUtil.NULL;
+import static org.lwjgl.system.MemoryUtil.*;
+import static org.lwjgl.system.MemoryUtil.memASCII;
 
 public class Renderer implements Callbacks {
     private static final boolean DEBUG = false;
@@ -135,6 +137,62 @@ public class Renderer implements Callbacks {
 
     private static Point translateToCanvas(Canvas canvas, int x, int y) {
         return new Point(x - canvas.getX(), y - canvas.getY());
+    }
+
+    private static BGFXCallbackInterface createBgfxCallbacks(MemoryStack stack) {
+        return BGFXCallbackInterface.callocStack(stack)
+                .vtbl(BGFXCallbackVtbl.callocStack(stack)
+                        .fatal((_this, _filePath, _line, _code, _str) -> {
+                            if (_code == BGFX_FATAL_DEBUG_CHECK) {
+                                System.out.println("BREAK"); // set debugger breakpoint
+                            } else {
+                                throw new RuntimeException("Fatal error " + _code + ": " + memASCII(_str));
+                            }
+                        })
+                        .trace_vargs((_this, _filePath, _line, _format, _argList) -> {
+                            try (MemoryStack frame = MemoryStack.stackPush()) {
+                                String filePath = (_filePath != NULL) ? memUTF8(_filePath) : "[n/a]";
+
+                                ByteBuffer buffer = frame.malloc(256); // arbitrary size to store formatted message
+                                int length = LibCStdio.nvsnprintf(memAddress(buffer), buffer.remaining(), _format, _argList);
+                                if (length > 0) {
+                                    String message = memASCII(buffer, length - 1); // bgfx log messages are terminated with the newline character
+                                    if (message.contains("Texture")) {
+                                        return;
+                                    }
+                                    System.out.println("bgfx: [" + filePath + " (" + _line + ")] - " + message);
+                                } else {
+                                    System.out.println("bgfx: [" + filePath + " (" + _line + ")] - error: unable to format output: " + memASCII(_format));
+                                }
+                            }
+                        })
+                        .profiler_begin((_this, _name, _abgr, _filePath, _line) -> {
+
+                        })
+                        .profiler_begin_literal((_this, _name, _abgr, _filePath, _line) -> {
+
+                        })
+                        .profiler_end(_this -> {
+
+                        })
+                        .cache_read_size((_this, _id) -> 0)
+                        .cache_read((_this, _id, _data, _size) -> false)
+                        .cache_write((_this, _id, _data, _size) -> {
+
+                        })
+                        .screen_shot((_this, _filePath, _width, _height, _pitch, _data, _size, _yflip) -> {
+                            System.out.println("screenshot");
+                        })
+                        .capture_begin((_this, _width, _height, _pitch, _format, _yflip) -> {
+                            System.out.println("capture_begin");
+                        })
+                        .capture_end(_this -> {
+                            System.out.println("capture_end");
+                        })
+                        .capture_frame((_this, _data, _size) -> {
+                            System.out.println("capture_frame");
+                        })
+                );
     }
 
     public Renderer(Client client, int width, int height) {
@@ -243,6 +301,7 @@ public class Renderer implements Callbacks {
         BGFXInit init = BGFXInit.mallocStack(stack);
         bgfx_init_ctor(init);
         init.type(BGFX_RENDERER_TYPE_COUNT)
+                .callback(createBgfxCallbacks(stack))
                 .resolution(it -> it
                         .reset(RESET)
                         .width(width)
