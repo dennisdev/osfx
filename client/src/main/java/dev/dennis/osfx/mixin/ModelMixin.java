@@ -67,4 +67,8 @@ public abstract class ModelMixin implements Model {
     @Getter("colorsC")
     @Override
     public abstract int[] getColorsC();
+
+    @Getter("trianglePriorities")
+    @Override
+    public abstract byte[] getTrianglePriorities();
 }
