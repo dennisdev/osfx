@@ -9,6 +9,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -129,7 +130,9 @@ public class CompileShadersMojo extends AbstractMojo {
             bitness = "x86";
         }
         String fileName = FILE_NAME + extension;
-        Path toolsPath = Paths.get(toolsDir);
+        File baseDir = project.getParent() == null ? project.getBasedir() : project.getParent().getBasedir();
+        Path basePath = Paths.get(baseDir.getAbsolutePath());
+        Path toolsPath = basePath.resolve(toolsDir);
         try {
             Files.createDirectories(toolsPath);
         } catch (IOException e) {
