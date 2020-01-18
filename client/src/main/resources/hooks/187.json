@@ -459,6 +459,11 @@
         }
       },
       "methods": {}
+    },
+    "Scene": {
+      "name": "ej",
+      "fields": {},
+      "methods": {}
     }
   }
 }
