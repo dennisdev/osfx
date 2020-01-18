@@ -273,6 +273,10 @@
           "name": "s",
           "desc": "[I"
         },
+        "triangleAlphas": {
+          "name": "t",
+          "desc": "[B"
+        },
         "trianglePriorities": {
           "name": "l",
           "desc": "[B"

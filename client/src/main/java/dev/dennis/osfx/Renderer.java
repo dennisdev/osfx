@@ -519,7 +519,7 @@ public class Renderer implements Callbacks {
                 bgfx_encoder_set_vertex_buffer(encoder, 0, vertexBufferId, command.getVertexStart(),
                         command.getVertexCount(), BGFX_INVALID_HANDLE);
 
-                bgfx_encoder_set_state(encoder, BGFX_STATE_DEFAULT, 0);
+                bgfx_encoder_set_state(encoder, BGFX_STATE_DEFAULT | BGFX_STATE_BLEND_ALPHA, 0);
                 bgfx_encoder_set_texture(encoder, 0, (short) 0, whiteTextureId, BGFX_SAMPLER_NONE);
 
                 bgfx_encoder_submit(encoder, SCENE_VIEW, quadProgram, 0, false);
@@ -800,6 +800,8 @@ public class Renderer implements Callbacks {
         int[] colorsB = model.getColorsB();
         int[] colorsC = model.getColorsC();
 
+        byte[] triangleAlphas = model.getTriangleAlphas();
+
         int[] colorPalette = client.getColorPalette();
 
         int modelVertexCount = model.getTriangleCount() * 3;
@@ -823,6 +825,9 @@ public class Renderer implements Callbacks {
             int colorB = colorsB[i];
             int colorC = colorsC[i];
             int alpha = 0xFF;
+            if (triangleAlphas != null) {
+                alpha -= triangleAlphas[i];
+            }
 
             if (colorC == -1) {
                 colorC = colorB = colorA;

@@ -23,5 +23,7 @@ public interface Model {
 
     int[] getColorsC();
 
+    byte[] getTriangleAlphas();
+
     byte[] getTrianglePriorities();
 }
