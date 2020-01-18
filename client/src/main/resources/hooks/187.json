@@ -463,7 +463,12 @@
     "Scene": {
       "name": "ej",
       "fields": {},
-      "methods": {}
+      "methods": {
+        "draw": {
+          "name": "af",
+          "desc": "(IIIIII)V"
+        }
+      }
     }
   }
 }

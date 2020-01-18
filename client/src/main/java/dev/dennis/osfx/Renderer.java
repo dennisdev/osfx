@@ -792,6 +792,11 @@ public class Renderer implements Callbacks {
     }
 
     @Override
+    public boolean drawScene(Scene scene, int cameraX, int cameraY, int cameraZ, int pitch, int yaw, int maxLevel) {
+        return false;
+    }
+
+    @Override
     public boolean drawModel(Model model, int rotation, int x, int y, int z) {
         int[] verticesX = model.getVerticesX();
         int[] verticesY = model.getVerticesY();

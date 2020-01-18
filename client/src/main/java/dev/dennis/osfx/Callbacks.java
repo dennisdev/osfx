@@ -1,9 +1,6 @@
 package dev.dennis.osfx;
 
-import dev.dennis.osfx.api.AbstractFont;
-import dev.dennis.osfx.api.IndexedSprite;
-import dev.dennis.osfx.api.Model;
-import dev.dennis.osfx.api.Sprite;
+import dev.dennis.osfx.api.*;
 
 public interface Callbacks {
     void onFrameStart();
@@ -37,6 +34,8 @@ public interface Callbacks {
     boolean drawGlyph(AbstractFont font, byte[] glyph, int x, int y, int width, int height, int rgb);
 
     boolean drawGlyph(AbstractFont font, byte[] glyph, int x, int y, int width, int height, int rgb, int alpha);
+
+    boolean drawScene(Scene scene, int cameraX, int cameraY, int cameraZ, int pitch, int yaw, int maxLevel);
 
     boolean drawModel(Model model, int rotation, int x, int y, int z);
 }
