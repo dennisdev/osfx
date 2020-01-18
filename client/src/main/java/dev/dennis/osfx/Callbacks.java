@@ -38,4 +38,6 @@ public interface Callbacks {
     boolean drawScene(Scene scene, int cameraX, int cameraY, int cameraZ, int pitch, int yaw, int maxLevel);
 
     boolean drawModel(Model model, int rotation, int x, int y, int z);
+
+    boolean drawModelTriangle(Model model, int index);
 }

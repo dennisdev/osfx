@@ -24,6 +24,18 @@ public abstract class ModelMixin implements Model {
         rs$draw(rotation, pitchSin, pitchCos, yawSin, yawCos, x, y, z, hash);
     }
 
+    @Copy("drawTriangle")
+    public abstract void rs$drawTriangle(int index);
+
+    @Replace("drawTriangle")
+    public void hd$drawTriangle(int index) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawModelTriangle(this, index)) {
+            return;
+        }
+        rs$drawTriangle(index);
+    }
+
     @Getter("vertexCount")
     @Override
     public abstract int getVertexCount();

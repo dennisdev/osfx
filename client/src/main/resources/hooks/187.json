@@ -294,6 +294,10 @@
         "drawOrtho": {
           "name": "aa",
           "desc": "(IIIIIIII)V"
+        },
+        "drawTriangle": {
+          "name": "aw",
+          "desc": "(I)V"
         }
       }
     },

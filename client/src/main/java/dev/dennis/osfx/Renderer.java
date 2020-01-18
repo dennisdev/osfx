@@ -873,7 +873,12 @@ public class Renderer implements Callbacks {
             vertexBuf.putFloat(0.0f);
         }
         renderModelCommands.add(new RenderModelCommand(model, rotation, x, y, z, vertexStart, modelVertexCount));
-        return true;
+        return false;
+    }
+
+    @Override
+    public boolean drawModelTriangle(Model model, int index) {
+        return isBufferProviderPixels();
     }
 
     private void sync() {
