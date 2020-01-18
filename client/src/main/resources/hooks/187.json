@@ -473,6 +473,11 @@
           "desc": "(IIIIII)V"
         }
       }
+    },
+    "Texture": {
+      "name": "dq",
+      "fields": {},
+      "methods": {}
     }
   }
 }
