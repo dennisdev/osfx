@@ -462,10 +462,6 @@ public class Renderer implements Callbacks {
 
         renderFullscreenTexture(encoder);
 
-        for (RenderCommand command : renderCommands) {
-            command.render(this, encoder);
-        }
-
         Widget viewportWidget = client.getViewportWidget();
         if (viewportWidget != null) {
             int viewportWidth = viewportWidget.getWidth();
@@ -517,7 +513,7 @@ public class Renderer implements Callbacks {
                 }
 
                 matrix.identity().translate(command.getX(), command.getY(), command.getZ())
-                    .rotateY(command.getRotation() * RS_TO_RADIANS);
+                        .rotateY(command.getRotation() * RS_TO_RADIANS);
                 bgfx_encoder_set_transform(encoder, matrix.get(matrixBuf));
 
                 bgfx_encoder_set_vertex_buffer(encoder, 0, vertexBufferId, command.getVertexStart(),
@@ -528,17 +524,10 @@ public class Renderer implements Callbacks {
 
                 bgfx_encoder_submit(encoder, SCENE_VIEW, quadProgram, 0, false);
             }
+        }
 
-            long state = BGFX_STATE_WRITE_RGB | BGFX_STATE_WRITE_A | BGFX_STATE_BLEND_ALPHA;
-            bgfx_encoder_set_texture(encoder, 0, (short) 0, frameBufferTextureId, BGFX_SAMPLER_NONE);
-            bgfx_encoder_set_state(encoder, state, 0);
-            if (bgfxCaps.originBottomLeft()) {
-                renderQuad(encoder, UI_VIEW, quadProgram, client.getViewportX(), client.getViewportY(),
-                        viewportWidth, viewportHeight, 0xFFFFFF, 0xFF, 0.0f, 1.0f, 1.0f, 0.0f);
-            } else {
-                renderQuad(encoder, UI_VIEW, quadProgram, client.getViewportX(), client.getViewportY(),
-                        viewportWidth, viewportHeight, 0xFFFFFF, 0xFF);
-            }
+        for (RenderCommand command : renderCommands) {
+            command.render(this, encoder);
         }
 
         bgfx_encoder_end(encoder);
@@ -793,6 +782,7 @@ public class Renderer implements Callbacks {
 
     @Override
     public boolean drawScene(Scene scene, int cameraX, int cameraY, int cameraZ, int pitch, int yaw, int maxLevel) {
+        renderCommands.add(new RenderSceneCommand());
         return false;
     }
 
@@ -1212,6 +1202,10 @@ public class Renderer implements Callbacks {
         return client;
     }
 
+    public BGFXCaps getBgfxCaps() {
+        return bgfxCaps;
+    }
+
     public short getQuadProgram() {
         return quadProgram;
     }
@@ -1226,5 +1220,9 @@ public class Renderer implements Callbacks {
 
     public short getWhiteTextureId() {
         return whiteTextureId;
+    }
+
+    public short getFrameBufferId() {
+        return frameBufferId;
     }
 }
