@@ -447,8 +447,6 @@ public class Renderer implements Callbacks {
 
         // End of frame
 
-        bgfx_dbg_text_clear(0, false);
-
         Canvas canvas = client.getCanvas();
 
         bgfx_set_view_rect(BACKGROUND_VIEW, 0, 0, width, height);
@@ -494,8 +492,6 @@ public class Renderer implements Callbacks {
                     pitch, yaw, zoom);
 
             bgfx_set_view_transform(SCENE_VIEW, null, matrix.get(matrixBuf));
-
-            short frameBufferTextureId = bgfx_get_texture(frameBufferId, 0);
 
             bgfx_encoder_set_scissor(encoder, 0, 0, width, height);
 
