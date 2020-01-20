@@ -278,6 +278,10 @@
           "name": "s",
           "desc": "[I"
         },
+        "triangleTextures": {
+          "name": "n",
+          "desc": "[S"
+        },
         "triangleAlphas": {
           "name": "t",
           "desc": "[B"

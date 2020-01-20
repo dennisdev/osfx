@@ -80,6 +80,10 @@ public abstract class ModelMixin implements Model {
     @Override
     public abstract int[] getColorsC();
 
+    @Getter("triangleTextures")
+    @Override
+    public abstract short[] getTriangleTextures();
+
     @Getter("triangleAlphas")
     @Override
     public abstract byte[] getTriangleAlphas();
