@@ -484,6 +484,10 @@
         "pixels": {
           "name": "v",
           "desc": "[I"
+        },
+        "loaded": {
+          "name": "k",
+          "desc": "Z"
         }
       },
       "methods": {}

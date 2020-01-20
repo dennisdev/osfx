@@ -9,4 +9,8 @@ public abstract class TextureMixin implements Texture {
     @Getter("pixels")
     @Override
     public abstract int[] getPixels();
+
+    @Getter("loaded")
+    @Override
+    public abstract boolean isLoaded();
 }
