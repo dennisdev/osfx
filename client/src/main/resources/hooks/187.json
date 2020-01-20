@@ -99,6 +99,11 @@
         "owner": "et",
         "name": "h",
         "desc": "[I"
+      },
+      "textureProvider": {
+        "owner": "s",
+        "name": "je",
+        "desc": "Ldt;"
       }
     },
     "methods": {

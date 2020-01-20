@@ -50,4 +50,6 @@ public interface Client extends GameEngine {
     Widget getViewportWidget();
 
     int[] getColorPalette();
+
+    TextureProvider getTextureProvider();
 }

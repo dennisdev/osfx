@@ -1,11 +1,8 @@
 package dev.dennis.osfx.mixin;
 
-import dev.dennis.osfx.api.AbstractFont;
-import dev.dennis.osfx.api.Widget;
+import dev.dennis.osfx.api.*;
 import dev.dennis.osfx.inject.mixin.*;
 import dev.dennis.osfx.Callbacks;
-import dev.dennis.osfx.api.BufferProvider;
-import dev.dennis.osfx.api.Client;
 
 @Mixin("Client")
 public abstract class ClientMixin implements Client {
@@ -203,4 +200,9 @@ public abstract class ClientMixin implements Client {
     @Getter("colorPalette")
     @Override
     public abstract int[] getColorPalette();
+
+    @Static
+    @Getter("textureProvider")
+    @Override
+    public abstract TextureProvider getTextureProvider();
 }
