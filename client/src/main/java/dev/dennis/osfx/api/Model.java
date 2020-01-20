@@ -25,6 +25,8 @@ public interface Model {
 
     short[] getTriangleTextures();
 
+    byte[] getTextureMapping();
+
     byte[] getTriangleAlphas();
 
     byte[] getTrianglePriorities();

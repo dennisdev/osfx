@@ -282,6 +282,10 @@
           "name": "n",
           "desc": "[S"
         },
+        "textureMapping": {
+          "name": "j",
+          "desc": "[B"
+        },
         "triangleAlphas": {
           "name": "t",
           "desc": "[B"
