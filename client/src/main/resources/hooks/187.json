@@ -499,7 +499,12 @@
     },
     "TextureProvider": {
       "name": "dt",
-      "fields": {},
+      "fields": {
+        "textures": {
+          "name": "f",
+          "desc": "[Ldq;"
+        }
+      },
       "methods": {}
     }
   }
