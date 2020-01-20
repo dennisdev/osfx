@@ -88,7 +88,7 @@ public class RenderGlyphCommand implements RenderCommand {
             for (int glyphY = 0; glyphY < glyphHeight; glyphY++) {
                 for (int glyphX = 0; glyphX < glyphWidth; glyphX++) {
                     if (glyph[glyphIndex++] != 0) {
-                        pixels[pixelIndex++] = 0xFFFFFFFF;
+                        pixels[pixelIndex++] = Renderer.WHITE_RGBA;
                     } else {
                         pixelIndex++;
                     }

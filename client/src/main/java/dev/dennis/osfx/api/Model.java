@@ -23,6 +23,12 @@ public interface Model {
 
     int[] getColorsC();
 
+    int[] getTextureIndicesP();
+
+    int[] getTextureIndicesM();
+
+    int[] getTextureIndicesN();
+
     short[] getTriangleTextures();
 
     byte[] getTextureMapping();

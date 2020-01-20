@@ -278,6 +278,18 @@
           "name": "s",
           "desc": "[I"
         },
+        "textureIndicesP": {
+          "name": "h",
+          "desc": "[I"
+        },
+        "textureIndicesM": {
+          "name": "m",
+          "desc": "[I"
+        },
+        "textureIndicesN": {
+          "name": "g",
+          "desc": "[I"
+        },
         "triangleTextures": {
           "name": "n",
           "desc": "[S"

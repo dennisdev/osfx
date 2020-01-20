@@ -21,6 +21,7 @@ import java.awt.event.*;
 import java.io.IOException;
 import java.nio.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CyclicBarrier;
 
@@ -72,6 +73,12 @@ public class Renderer implements Callbacks {
 
     private static final float DEFAULT_ZOOM = 25.0f / 256.0f;
 
+    public static final int WHITE_RGBA = 0xFFFFFFFF;
+
+    private static final int SMALL_TEXTURE_SIZE = 128;
+
+    private static final int TEXTURE_SIZE = 128;
+
     public static final int BACKGROUND_VIEW = 0;
 
     public static final int UI_VIEW = 1;
@@ -118,11 +125,17 @@ public class Renderer implements Callbacks {
 
     private BGFXVertexLayout layout;
 
+    private BGFXVertexLayout sceneLayout;
+
     private short quadProgram;
+
+    private short sceneProgram;
 
     private short fullscreenTextureId;
 
     private short whiteTextureId;
+
+    private short textureArrayId;
 
     private FloatBuffer matrixBuf;
 
@@ -205,6 +218,21 @@ public class Renderer implements Callbacks {
                 );
     }
 
+    private static void addSceneVertex(ByteBuffer vertex, int x, int y, int z, int rgb, int alpha, float u, float v,
+                                       int textureId) {
+        int r = rgb >> 16 & 0xFF;
+        int g = rgb >> 8 & 0xFF;
+        int b = rgb & 0xFF;
+
+        vertex.putFloat(x);
+        vertex.putFloat(y);
+        vertex.putFloat(z);
+        vertex.putInt(alpha << 24 | b << 16 | g << 8 | r);
+        vertex.putFloat(u);
+        vertex.putFloat(v);
+        vertex.put((byte) textureId);
+    }
+
     public Renderer(Client client, int width, int height) {
         this.client = client;
         this.barrier = new CyclicBarrier(2);
@@ -217,6 +245,7 @@ public class Renderer implements Callbacks {
         this.renderModelCommands = new ArrayList<>();
         this.fullscreenTextureId = -1;
         this.whiteTextureId = -1;
+        this.textureArrayId = -1;
         this.matrix = new Matrix4f();
         this.frameBufferId = -1;
         this.vertexBufferId = -1;
@@ -357,21 +386,79 @@ public class Renderer implements Callbacks {
                 1, BGFX_TEXTURE_FORMAT_BGRA8);
         fullscreenTextureBuf = MemoryUtil.memAllocInt(textureInfo.storageSize() / 4 + 1);
         whiteTextureBuf = MemoryUtil.memAllocInt(1);
-        whiteTextureBuf.put(0xFFFFFFFF);
+        whiteTextureBuf.put(WHITE_RGBA);
         whiteTextureBuf.flip();
         whiteTextureId = bgfx_create_texture_2d(1, 1, false, 1,
                 BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, bgfx_make_ref(whiteTextureBuf));
 
         quadProgram = createProgram("vs_quad", "fs_quad");
+        sceneProgram = createProgram("vs_scene", "fs_scene");
 
-        layout = createVertexLayout(false, true, true);
+        layout = createVertexLayout(false, true, true, false);
+        sceneLayout = createVertexLayout(false, true, true, true);
 
         matrixBuf = MemoryUtil.memAllocFloat(16);
 
         int initialTriangleCount = 2 << 17;
         for (int i = 0; i < vertexBuffers.length; i++) {
-            vertexBuffers[i] = MemoryUtil.memAlloc(initialTriangleCount * 3 * layout.stride());
+            vertexBuffers[i] = MemoryUtil.memAlloc(initialTriangleCount * 3 * sceneLayout.stride());
         }
+    }
+
+    private void initTextureArray() {
+        TextureProvider textureProvider = client.getTextureProvider();
+        if (textureProvider == null) {
+            return;
+        }
+        Texture[] textures = textureProvider.getTextures();
+
+        int textureCount = textures.length + 1;
+
+        textureArrayId = bgfx_create_texture_2d(TEXTURE_SIZE, TEXTURE_SIZE, false, textureCount,
+                BGFX_TEXTURE_FORMAT_BGRA8, BGFX_TEXTURE_NONE, null);
+
+        initDefaultTexture();
+
+        updateTextures();
+    }
+
+    private void initDefaultTexture() {
+        int[] pixels = new int[TEXTURE_SIZE * TEXTURE_SIZE];
+        Arrays.fill(pixels, WHITE_RGBA);
+        updateTexture(0, pixels);
+    }
+
+    private void updateTextures() {
+        TextureProvider textureProvider = client.getTextureProvider();
+        if (textureProvider == null) {
+            return;
+        }
+        Texture[] textures = textureProvider.getTextures();
+        for (int id = 0; id < textures.length; id++) {
+            Texture texture = textures[id];
+            if (texture != null && !texture.isLoaded()) {
+                int[] pixels = textureProvider.load(id);
+                if (pixels == null) {
+                    continue;
+                }
+                updateTexture(id + 1, pixels);
+            }
+        }
+    }
+
+    private void updateTexture(int layer, int[] pixels) {
+        for (int i = 0; i < pixels.length; i++) {
+            if (pixels[i] != 0) {
+                pixels[i] |= 0xFF << 24;
+            }
+        }
+        int size = pixels.length == 4096 ? SMALL_TEXTURE_SIZE : TEXTURE_SIZE;
+        IntBuffer pixelBuffer = MemoryUtil.memAllocInt(pixels.length);
+        pixelBuffer.put(pixels);
+        pixelBuffer.flip();
+        buffersToRemove.add(pixelBuffer);
+        bgfx_update_texture_2d(textureArrayId, layer, 0, 0, 0, size, size,
+                bgfx_copy(pixelBuffer), 0xFFFF);
     }
 
     private void destroy() {
@@ -397,11 +484,16 @@ public class Renderer implements Callbacks {
         MemoryUtil.memFree(matrixBuf);
 
         layout.free();
+        sceneLayout.free();
 
         bgfx_destroy_texture(fullscreenTextureId);
         bgfx_destroy_texture(whiteTextureId);
+        if (textureArrayId != -1) {
+            bgfx_destroy_texture(textureArrayId);
+        }
 
         bgfx_destroy_program(quadProgram);
+        bgfx_destroy_program(sceneProgram);
 
         bgfx_shutdown();
 
@@ -495,13 +587,19 @@ public class Renderer implements Callbacks {
 
             bgfx_encoder_set_scissor(encoder, 0, 0, width, height);
 
+            if (textureArrayId == -1) {
+                initTextureArray();
+            } else {
+                updateTextures();
+            }
+
             if (vertexBufferId != -1) {
                 vertexBuffersToRemove.add(vertexBufferId);
             }
 
             ByteBuffer vertexBuffer = vertexBuffers[frame % 2];
             vertexBuffer.flip();
-            vertexBufferId = bgfx_create_vertex_buffer(bgfx_make_ref(vertexBuffer), layout, 0);
+            vertexBufferId = bgfx_create_vertex_buffer(bgfx_make_ref(vertexBuffer), sceneLayout, 0);
 
             for (RenderModelCommand command : renderModelCommands) {
                 if (command.getVertexCount() == 0) {
@@ -516,9 +614,9 @@ public class Renderer implements Callbacks {
                         command.getVertexCount(), BGFX_INVALID_HANDLE);
 
                 bgfx_encoder_set_state(encoder, BGFX_STATE_DEFAULT | BGFX_STATE_BLEND_ALPHA, 0);
-                bgfx_encoder_set_texture(encoder, 0, (short) 0, whiteTextureId, BGFX_SAMPLER_NONE);
+                bgfx_encoder_set_texture(encoder, 0, (short) 0, textureArrayId, BGFX_SAMPLER_U_CLAMP);
 
-                bgfx_encoder_submit(encoder, SCENE_VIEW, quadProgram, 0, false);
+                bgfx_encoder_submit(encoder, SCENE_VIEW, sceneProgram, 0, false);
             }
         }
 
@@ -796,13 +894,15 @@ public class Renderer implements Callbacks {
         int[] colorsB = model.getColorsB();
         int[] colorsC = model.getColorsC();
 
+        short[] triangleTextures = model.getTriangleTextures();
+
         byte[] triangleAlphas = model.getTriangleAlphas();
 
         int[] colorPalette = client.getColorPalette();
 
         ByteBuffer vertexBuf = vertexBuffers[frame % 2];
 
-        if (vertexBuf.remaining() < model.getTriangleCount() * 3 * layout.stride()) {
+        if (vertexBuf.remaining() < model.getTriangleCount() * 3 * sceneLayout.stride()) {
             vertexBuf.flip();
             ByteBuffer newBuffer = MemoryUtil.memAlloc(vertexBuf.capacity() * 2);
             newBuffer.put(vertexBuf);
@@ -813,62 +913,156 @@ public class Renderer implements Callbacks {
 
         int vertexStart = vertexCount;
 
+        float[][][] texCoords = computeTexCoords(model);
+
+        float[][] us = texCoords[0];
+        float[][] vs = texCoords[1];
+
         for (int i = 0; i < model.getTriangleCount(); i++) {
             int colorA = colorsA[i];
             int colorB = colorsB[i];
             int colorC = colorsC[i];
+            int textureId = 0;
+            if (triangleTextures != null) {
+                textureId = triangleTextures[i] + 1;
+            }
             int alpha = 0xFF;
-            if (triangleAlphas != null) {
+            if (triangleAlphas != null && textureId > 0) {
                 alpha -= triangleAlphas[i];
             }
-
             if (colorC == -1) {
                 colorC = colorB = colorA;
             } else if (colorC == -2) {
                 continue;
             }
 
-            int rgb = colorPalette[colorA];
-            int r = rgb >> 16 & 0xFF;
-            int g = rgb >> 8 & 0xFF;
-            int b = rgb & 0xFF;
+            float[] u = us[i];
+            float[] v = vs[i];
 
-            vertexBuf.putFloat(verticesX[indicesA[i]]);
-            vertexBuf.putFloat(verticesY[indicesA[i]]);
-            vertexBuf.putFloat(verticesZ[indicesA[i]]);
-            vertexBuf.putInt(alpha << 24 | b << 16 | g << 8 | r);
-            vertexBuf.putFloat(0.0f);
-            vertexBuf.putFloat(1.0f);
-
-            rgb = colorPalette[colorB];
-            r = rgb >> 16 & 0xFF;
-            g = rgb >> 8 & 0xFF;
-            b = rgb & 0xFF;
-
-            vertexBuf.putFloat(verticesX[indicesB[i]]);
-            vertexBuf.putFloat(verticesY[indicesB[i]]);
-            vertexBuf.putFloat(verticesZ[indicesB[i]]);
-            vertexBuf.putInt(alpha << 24 | b << 16 | g << 8 | r);
-            vertexBuf.putFloat(1.0f);
-            vertexBuf.putFloat(1.0f);
-
-            rgb = colorPalette[colorC];
-            r = rgb >> 16 & 0xFF;
-            g = rgb >> 8 & 0xFF;
-            b = rgb & 0xFF;
-
-            vertexBuf.putFloat(verticesX[indicesC[i]]);
-            vertexBuf.putFloat(verticesY[indicesC[i]]);
-            vertexBuf.putFloat(verticesZ[indicesC[i]]);
-            vertexBuf.putInt(alpha << 24 | b << 16 | g << 8 | r);
-            vertexBuf.putFloat(0.0f);
-            vertexBuf.putFloat(0.0f);
+            addSceneVertex(vertexBuf,
+                    verticesX[indicesA[i]],
+                    verticesY[indicesA[i]],
+                    verticesZ[indicesA[i]],
+                    colorPalette[colorA],
+                    alpha,
+                    u[0],
+                    v[0],
+                    textureId);
+            addSceneVertex(vertexBuf,
+                    verticesX[indicesB[i]],
+                    verticesY[indicesB[i]],
+                    verticesZ[indicesB[i]],
+                    colorPalette[colorB],
+                    alpha,
+                    u[1],
+                    v[1],
+                    textureId);
+            addSceneVertex(vertexBuf,
+                    verticesX[indicesC[i]],
+                    verticesY[indicesC[i]],
+                    verticesZ[indicesC[i]],
+                    colorPalette[colorC],
+                    alpha,
+                    u[2],
+                    v[2],
+                    textureId);
 
             vertexCount += 3;
         }
         renderModelCommands.add(new RenderModelCommand(model, rotation, x, y, z, vertexStart,
                 vertexCount - vertexStart));
         return false;
+    }
+
+    private float[][][] computeTexCoords(Model model) {
+        int triangleCount = model.getTriangleCount();
+
+        int[] verticesX = model.getVerticesX();
+        int[] verticesY = model.getVerticesY();
+        int[] verticesZ = model.getVerticesZ();
+
+        int[] indicesA = model.getIndicesA();
+        int[] indicesB = model.getIndicesB();
+        int[] indicesC = model.getIndicesC();
+
+        int[] texIndicesP = model.getTextureIndicesP();
+        int[] texIndicesM = model.getTextureIndicesM();
+        int[] texIndicesN = model.getTextureIndicesN();
+
+        short[] triangleTextures = model.getTriangleTextures();
+        byte[] textureMapping = model.getTextureMapping();
+
+        float[][] texCoordUs = new float[triangleCount][3];
+        float[][] texCoordVs = new float[triangleCount][3];
+        for (int i = 0; i < triangleCount; i++) {
+            int textureId = -1;
+            if (triangleTextures != null) {
+                textureId = triangleTextures[i];
+            }
+            int mapping = -1;
+            if (textureMapping != null) {
+                mapping = textureMapping[i];
+            }
+            if (textureId == -1) {
+                continue;
+            }
+            float[] u = texCoordUs[i];
+            float[] v = texCoordVs[i];
+            if (mapping == -1) {
+                u[0] = 0.0f;
+                v[0] = 1.0f;
+
+                u[1] = 1.0f;
+                v[1] = 1.0f;
+
+                u[2] = 0.0f;
+                v[2] = 0.0f;
+            } else {
+                mapping &= 0xFF;
+                int a = indicesA[i];
+                int b = indicesB[i];
+                int c = indicesC[i];
+                int p = texIndicesP[mapping];
+                int m = texIndicesM[mapping];
+                int n = texIndicesN[mapping];
+                float originX = verticesX[p];
+                float originY = verticesY[p];
+                float originZ = verticesZ[p];
+                float mxDistance = verticesX[m] - originX;
+                float myDistance = verticesY[m] - originY;
+                float mzDistance = verticesZ[m] - originZ;
+                float nxDistance = verticesX[n] - originX;
+                float nyDistance = verticesY[n] - originY;
+                float nzDistance = verticesZ[n] - originZ;
+                float axDistance = verticesX[a] - originX;
+                float ayDistance = verticesY[a] - originY;
+                float azDistance = verticesZ[a] - originZ;
+                float bxDistance = verticesX[b] - originX;
+                float byDistance = verticesY[b] - originY;
+                float bzDistance = verticesZ[b] - originZ;
+                float cxDistance = verticesX[c] - originX;
+                float cyDistance = verticesY[c] - originY;
+                float czDistance = verticesZ[c] - originZ;
+                float f_797_ = myDistance * nzDistance - mzDistance * nyDistance;
+                float f_798_ = mzDistance * nxDistance - mxDistance * nzDistance;
+                float f_799_ = mxDistance * nyDistance - myDistance * nxDistance;
+                float f_800_ = nyDistance * f_799_ - nzDistance * f_798_;
+                float f_801_ = nzDistance * f_797_ - nxDistance * f_799_;
+                float f_802_ = nxDistance * f_798_ - nyDistance * f_797_;
+                float f_803_ = 1.0f / (f_800_ * mxDistance + f_801_ * myDistance + f_802_ * mzDistance);
+                u[0] = (f_800_ * axDistance + f_801_ * ayDistance + f_802_ * azDistance) * f_803_;
+                u[1] = (f_800_ * bxDistance + f_801_ * byDistance + f_802_ * bzDistance) * f_803_;
+                u[2] = (f_800_ * cxDistance + f_801_ * cyDistance + f_802_ * czDistance) * f_803_;
+                f_800_ = myDistance * f_799_ - mzDistance * f_798_;
+                f_801_ = mzDistance * f_797_ - mxDistance * f_799_;
+                f_802_ = mxDistance * f_798_ - myDistance * f_797_;
+                f_803_ = 1.0f / (f_800_ * nxDistance + f_801_ * nyDistance + f_802_ * nzDistance);
+                v[0] = (f_800_ * axDistance + f_801_ * ayDistance + f_802_ * azDistance) * f_803_;
+                v[1] = (f_800_ * bxDistance + f_801_ * byDistance + f_802_ * bzDistance) * f_803_;
+                v[2] = (f_800_ * cxDistance + f_801_ * cyDistance + f_802_ * czDistance) * f_803_;
+            }
+        }
+        return new float[][][] {texCoordUs, texCoordVs};
     }
 
     @Override
@@ -997,7 +1191,8 @@ public class Renderer implements Callbacks {
         }
     }
 
-    private BGFXVertexLayout createVertexLayout(boolean withNormals, boolean withColor, boolean withTexCoords) {
+    private BGFXVertexLayout createVertexLayout(boolean withNormals, boolean withColor, boolean withTexCoords,
+                                                boolean withTextureId) {
         BGFXVertexLayout layout = BGFXVertexLayout.calloc();
 
         bgfx_vertex_layout_begin(layout, rendererType);
@@ -1034,6 +1229,15 @@ public class Renderer implements Callbacks {
                     BGFX_ATTRIB_TYPE_FLOAT,
                     false,
                     false);
+        }
+
+        if (withTextureId) {
+            bgfx_vertex_layout_add(layout,
+                    BGFX_ATTRIB_TEXCOORD7,
+                    1,
+                    BGFX_ATTRIB_TYPE_UINT8,
+                    false,
+                    true);
         }
 
         bgfx_vertex_layout_end(layout);
