@@ -505,7 +505,13 @@
           "desc": "[Ldq;"
         }
       },
-      "methods": {}
+      "methods": {
+        "load": {
+          "name": "y",
+          "desc": "(IS)[I",
+          "dummyValue": -13601
+        }
+      }
     }
   }
 }
