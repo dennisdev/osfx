@@ -480,7 +480,12 @@
     },
     "Texture": {
       "name": "dq",
-      "fields": {},
+      "fields": {
+        "pixels": {
+          "name": "v",
+          "desc": "[I"
+        }
+      },
       "methods": {}
     }
   }
