@@ -800,11 +800,9 @@ public class Renderer implements Callbacks {
 
         int[] colorPalette = client.getColorPalette();
 
-        int modelVertexCount = model.getTriangleCount() * 3;
-
         ByteBuffer vertexBuf = vertexBuffers[frame % 2];
 
-        if (vertexBuf.remaining() < modelVertexCount * layout.stride()) {
+        if (vertexBuf.remaining() < model.getTriangleCount() * 3 * layout.stride()) {
             vertexBuf.flip();
             ByteBuffer newBuffer = MemoryUtil.memAlloc(vertexBuf.capacity() * 2);
             newBuffer.put(vertexBuf);
@@ -814,7 +812,6 @@ public class Renderer implements Callbacks {
         }
 
         int vertexStart = vertexCount;
-        vertexCount += modelVertexCount;
 
         for (int i = 0; i < model.getTriangleCount(); i++) {
             int colorA = colorsA[i];
@@ -828,8 +825,7 @@ public class Renderer implements Callbacks {
             if (colorC == -1) {
                 colorC = colorB = colorA;
             } else if (colorC == -2) {
-                colorC = colorB = colorA = 0;
-                alpha = 0;
+                continue;
             }
 
             int rgb = colorPalette[colorA];
@@ -867,8 +863,11 @@ public class Renderer implements Callbacks {
             vertexBuf.putInt(alpha << 24 | b << 16 | g << 8 | r);
             vertexBuf.putFloat(0.0f);
             vertexBuf.putFloat(0.0f);
+
+            vertexCount += 3;
         }
-        renderModelCommands.add(new RenderModelCommand(model, rotation, x, y, z, vertexStart, modelVertexCount));
+        renderModelCommands.add(new RenderModelCommand(model, rotation, x, y, z, vertexStart,
+                vertexCount - vertexStart));
         return false;
     }
 
