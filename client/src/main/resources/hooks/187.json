@@ -491,6 +491,11 @@
         }
       },
       "methods": {}
+    },
+    "TextureProvider": {
+      "name": "dt",
+      "fields": {},
+      "methods": {}
     }
   }
 }
