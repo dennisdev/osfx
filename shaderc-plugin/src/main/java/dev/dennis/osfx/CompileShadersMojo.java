@@ -9,9 +9,7 @@ import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -136,13 +134,13 @@ public class CompileShadersMojo extends AbstractMojo {
         try {
             Files.createDirectories(toolsPath);
         } catch (IOException e) {
-            throw new MojoExecutionException("Failed creating tools directory", e);
+            throw new MojoFailureException("Failed creating tools directory", e);
         }
         Path compilerPath = toolsPath.resolve(fileName);
         if (!Files.exists(compilerPath) || !Files.isRegularFile(compilerPath)) {
             log.info("Downloading shader compiler binary");
             try {
-                String url =  BASE_URL + lwjglVersion + "/" + os + "/" + bitness
+                String url = BASE_URL + lwjglVersion + "/" + os + "/" + bitness
                         + "/bgfx-tools/" + fileName;
                 log.info(url);
                 try (InputStream in = new URL(url).openStream()) {
@@ -165,7 +163,7 @@ public class CompileShadersMojo extends AbstractMojo {
                     try {
                         compileShaders(compilerPath, path, outputPath);
                     } catch (Exception e) {
-                        throw new MojoFailureException("Failed compiling shader: " + path, e);
+                        throw new MojoFailureException("Failed compiling shader: " + path + ", " + e.getMessage(), e);
                     }
                 }
             }
@@ -174,7 +172,8 @@ public class CompileShadersMojo extends AbstractMojo {
         }
     }
 
-    private void compileShaders(Path compilerPath, Path shaderPath, Path outputPath) throws IOException {
+    private void compileShaders(Path compilerPath, Path shaderPath, Path outputPath)
+            throws IOException, MojoFailureException {
         ShaderType type = getShaderType(shaderPath);
         if (type == null) {
             log.error("Unknown shader type");
@@ -216,7 +215,8 @@ public class CompileShadersMojo extends AbstractMojo {
     }
 
     private void compileShader(Path compilerPath, Path shaderPath, Path outputPath, ShaderType type,
-                               String platform, String profile, int optimizationLvl) throws IOException {
+                               String platform, String profile, int optimizationLvl)
+            throws IOException, MojoFailureException {
         Files.createDirectories(outputPath);
         Path shaderOutputPath = outputPath.resolve(shaderPath.getFileName().toString()
                 .replace(".sc", ".bin"));
@@ -241,6 +241,18 @@ public class CompileShadersMojo extends AbstractMojo {
         if (disassemble) {
             command.add("--disasm");
         }
-        Runtime.getRuntime().exec(command.toArray(new String[0]));
+        Process process = Runtime.getRuntime().exec(command.toArray(new String[0]));
+        BufferedReader outputReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+        StringBuilder builder = new StringBuilder();
+        String line;
+        while ((line = outputReader.readLine()) != null) {
+            builder.append(line);
+            builder.append("\n");
+        }
+        String output = builder.toString();
+        if (output.endsWith("Failed to build shader.\n")) {
+            throw new MojoFailureException(output);
+        }
     }
 }
