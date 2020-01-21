@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.List;
 
 public class AddMethodsAdapter extends ClassVisitor {
@@ -103,9 +104,6 @@ public class AddMethodsAdapter extends ClassVisitor {
                 }
             }
             super.visitFieldInsn(opcode, owner, name, descriptor);
-//            if (!descriptor.equals(oldDescriptor)) {
-//                checkCast(Type.getObjectType(oldDescriptor));
-//            }
         }
 
         @Override
@@ -129,6 +127,7 @@ public class AddMethodsAdapter extends ClassVisitor {
                     }
                     if (hookName != null) {
                         Integer dummyValue;
+                        Type[] argTypes = Type.getArgumentTypes(descriptor);
                         if (isStatic) {
                             StaticMethodHook methodHook = hooks.getStaticMethod(hookName);
                             if (methodHook == null) {
@@ -144,6 +143,24 @@ public class AddMethodsAdapter extends ClassVisitor {
                             }
                             descriptor = methodHook.getDesc();
                             dummyValue = methodHook.getDummyValue();
+                        }
+                        Type[] newArgTypes = Type.getArgumentTypes(descriptor);
+                        if (!Arrays.equals(argTypes, newArgTypes)) {
+                            int[] locals = new int[argTypes.length];
+                            for (int i = 0; i < locals.length; i++) {
+                                locals[i] = newLocal(argTypes[i]);
+                            }
+                            for (int i = locals.length - 1; i >= 0; i--) {
+                                storeLocal(locals[i]);
+                            }
+                            for (int i = 0; i < locals.length; i++) {
+                                Type type = argTypes[i];
+                                Type newType = newArgTypes[i];
+                                loadLocal(locals[i]);
+                                if (!type.equals(newType)) {
+                                    checkCast(newType);
+                                }
+                            }
                         }
                         if (dummyValue != null) {
                             push(dummyValue);
