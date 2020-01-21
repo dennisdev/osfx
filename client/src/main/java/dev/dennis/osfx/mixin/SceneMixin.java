@@ -3,10 +3,7 @@ package dev.dennis.osfx.mixin;
 import dev.dennis.osfx.Callbacks;
 import dev.dennis.osfx.api.Client;
 import dev.dennis.osfx.api.Scene;
-import dev.dennis.osfx.inject.mixin.Copy;
-import dev.dennis.osfx.inject.mixin.Mixin;
-import dev.dennis.osfx.inject.mixin.Replace;
-import dev.dennis.osfx.inject.mixin.Shadow;
+import dev.dennis.osfx.inject.mixin.*;
 
 @Mixin("Scene")
 public abstract class SceneMixin implements Scene {
@@ -24,4 +21,8 @@ public abstract class SceneMixin implements Scene {
         }
         rs$draw(cameraX, cameraY, cameraZ, pitch, yaw, maxLevel);
     }
+
+    @Getter("tileHeights")
+    @Override
+    public abstract int[][][] getTileHeights();
 }

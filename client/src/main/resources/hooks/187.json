@@ -495,7 +495,12 @@
     },
     "Scene": {
       "name": "ej",
-      "fields": {},
+      "fields": {
+        "tileHeights": {
+          "name": "p",
+          "desc": "[[[I"
+        }
+      },
       "methods": {
         "draw": {
           "name": "af",
