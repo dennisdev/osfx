@@ -40,4 +40,6 @@ public interface Callbacks {
     boolean drawModel(Model model, int rotation, int x, int y, int z);
 
     boolean drawModelTriangle(Model model, int index);
+
+    boolean drawTile(Scene scene, SceneTilePaint tile, int level, int x, int y);
 }

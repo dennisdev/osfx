@@ -5,8 +5,6 @@ import dev.dennis.osfx.api.Model;
 import java.nio.ByteBuffer;
 
 public class RenderModelCommand {
-    private final Model model;
-
     private final int rotation;
 
     private final int x;
@@ -19,18 +17,13 @@ public class RenderModelCommand {
 
     private final int vertexCount;
 
-    public RenderModelCommand(Model model, int rotation, int x, int y, int z, int vertexStart, int vertexCount) {
-        this.model = model;
+    public RenderModelCommand(int rotation, int x, int y, int z, int vertexStart, int vertexCount) {
         this.rotation = rotation;
         this.x = x;
         this.y = y;
         this.z = z;
         this.vertexStart = vertexStart;
         this.vertexCount = vertexCount;
-    }
-
-    public Model getModel() {
-        return model;
     }
 
     public int getRotation() {

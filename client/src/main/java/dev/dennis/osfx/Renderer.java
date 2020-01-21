@@ -75,9 +75,13 @@ public class Renderer implements Callbacks {
 
     public static final int WHITE_RGBA = 0xFFFFFFFF;
 
-    private static final int SMALL_TEXTURE_SIZE = 128;
+    private static final int SMALL_TEXTURE_SIZE = 64;
 
     private static final int TEXTURE_SIZE = 128;
+
+    private static final int LOCAL_TILE_SIZE = 128;
+
+    private static final int INVALID_TILE_COLOR = 12345678;
 
     public static final int BACKGROUND_VIEW = 0;
 
@@ -880,6 +884,18 @@ public class Renderer implements Callbacks {
         return false;
     }
 
+    private ByteBuffer ensureVertexBufferCapacity(int vertexCount) {
+        ByteBuffer vertexBuf = vertexBuffers[frame % 2];
+        if (vertexBuf.remaining() < vertexCount * sceneLayout.stride()) {
+            vertexBuf.flip();
+            ByteBuffer newBuffer = MemoryUtil.memAlloc(vertexBuf.capacity() * 2);
+            newBuffer.put(vertexBuf);
+            buffersToRemove.add(vertexBuf);
+            vertexBuf = vertexBuffers[frame % 2] = newBuffer;
+        }
+        return vertexBuf;
+    }
+
     @Override
     public boolean drawModel(Model model, int rotation, int x, int y, int z) {
         int[] verticesX = model.getVerticesX();
@@ -900,16 +916,7 @@ public class Renderer implements Callbacks {
 
         int[] colorPalette = client.getColorPalette();
 
-        ByteBuffer vertexBuf = vertexBuffers[frame % 2];
-
-        if (vertexBuf.remaining() < model.getTriangleCount() * 3 * sceneLayout.stride()) {
-            vertexBuf.flip();
-            ByteBuffer newBuffer = MemoryUtil.memAlloc(vertexBuf.capacity() * 2);
-            newBuffer.put(vertexBuf);
-            buffersToRemove.add(vertexBuf);
-            vertexBuf = vertexBuffers[frame % 2] = newBuffer;
-            System.out.println("new buffer: " + vertexBuf.capacity());
-        }
+        ByteBuffer vertex = ensureVertexBufferCapacity(model.getTriangleCount() * 3);
 
         int vertexStart = vertexCount;
 
@@ -939,7 +946,7 @@ public class Renderer implements Callbacks {
             float[] u = us[i];
             float[] v = vs[i];
 
-            addSceneVertex(vertexBuf,
+            addSceneVertex(vertex,
                     verticesX[indicesA[i]],
                     verticesY[indicesA[i]],
                     verticesZ[indicesA[i]],
@@ -948,7 +955,7 @@ public class Renderer implements Callbacks {
                     u[0],
                     v[0],
                     textureId);
-            addSceneVertex(vertexBuf,
+            addSceneVertex(vertex,
                     verticesX[indicesB[i]],
                     verticesY[indicesB[i]],
                     verticesZ[indicesB[i]],
@@ -957,7 +964,7 @@ public class Renderer implements Callbacks {
                     u[1],
                     v[1],
                     textureId);
-            addSceneVertex(vertexBuf,
+            addSceneVertex(vertex,
                     verticesX[indicesC[i]],
                     verticesY[indicesC[i]],
                     verticesZ[indicesC[i]],
@@ -969,7 +976,7 @@ public class Renderer implements Callbacks {
 
             vertexCount += 3;
         }
-        renderModelCommands.add(new RenderModelCommand(model, rotation, x, y, z, vertexStart,
+        renderModelCommands.add(new RenderModelCommand(rotation, x, y, z, vertexStart,
                 vertexCount - vertexStart));
         return false;
     }
@@ -1068,6 +1075,67 @@ public class Renderer implements Callbacks {
     @Override
     public boolean drawModelTriangle(Model model, int index) {
         return isBufferProviderPixels();
+    }
+
+    @Override
+    public boolean drawTile(Scene scene, SceneTilePaint tile, int level, int x, int y) {
+        int[] colorPalette = client.getColorPalette();
+        int[][][] tileHeights = scene.getTileHeights();
+
+        int swHeight = tileHeights[level][x][y];
+        int seHeight = tileHeights[level][x + 1][y];
+        int neHeight = tileHeights[level][x + 1][y + 1];
+        int nwHeight = tileHeights[level][x][y + 1];
+
+        int neColor = tile.getNeColor();
+        int nwColor = tile.getNwColor();
+        int seColor = tile.getSeColor();
+        int swColor = tile.getSwColor();
+
+        if (neColor == INVALID_TILE_COLOR) {
+            return false;
+        }
+
+        int neRgb = colorPalette[neColor];
+        int nwRgb = colorPalette[nwColor];
+        int seRgb = colorPalette[seColor];
+        int swRgb = colorPalette[swColor];
+
+        ByteBuffer vertex = ensureVertexBufferCapacity(6);
+
+        int localX = x * LOCAL_TILE_SIZE;
+        int localY = y * LOCAL_TILE_SIZE;
+
+        int vertexStart = vertexCount;
+
+        int vertexSwX = 0;
+        int vertexSwY = 0;
+
+        int vertexNwX = 0;
+        int vertexNwY = LOCAL_TILE_SIZE;
+
+        int vertexNeX = LOCAL_TILE_SIZE;
+        int vertexNeY = LOCAL_TILE_SIZE;
+
+        int vertexSeX = LOCAL_TILE_SIZE;
+        int vertexSeY = 0;
+
+        int textureId = tile.getTextureId() + 1;
+
+        addSceneVertex(vertex, vertexSeX, seHeight, vertexSeY, seRgb, 0xFF, 1.0f, 0.0f, textureId);
+        addSceneVertex(vertex, vertexNwX, nwHeight, vertexNwY, nwRgb, 0xFF, 0.0f, 1.0f, textureId);
+        addSceneVertex(vertex, vertexSwX, swHeight, vertexSwY, swRgb, 0xFF, 0.0f, 0.0f, textureId);
+
+        addSceneVertex(vertex, vertexSeX, seHeight, vertexSeY, seRgb, 0xFF, 1.0f, 0.0f, textureId);
+        addSceneVertex(vertex, vertexNeX, neHeight, vertexNeY, neRgb, 0xFF, 1.0f, 1.0f, textureId);
+        addSceneVertex(vertex, vertexNwX, nwHeight, vertexNwY, nwRgb, 0xFF, 0.0f, 1.0f, textureId);
+
+        vertexCount += 6;
+
+        renderModelCommands.add(new RenderModelCommand(0, localX - client.getCameraX(),
+                -client.getCameraZ(), localY - client.getCameraY(), vertexStart,
+                vertexCount - vertexStart));
+        return false;
     }
 
     private void sync() {

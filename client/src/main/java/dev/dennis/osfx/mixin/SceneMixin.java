@@ -3,6 +3,7 @@ package dev.dennis.osfx.mixin;
 import dev.dennis.osfx.Callbacks;
 import dev.dennis.osfx.api.Client;
 import dev.dennis.osfx.api.Scene;
+import dev.dennis.osfx.api.SceneTilePaint;
 import dev.dennis.osfx.inject.mixin.*;
 
 @Mixin("Scene")
@@ -20,6 +21,20 @@ public abstract class SceneMixin implements Scene {
             return;
         }
         rs$draw(cameraX, cameraY, cameraZ, pitch, yaw, maxLevel);
+    }
+
+    @Copy("drawTileUnderlay")
+    public abstract void rs$drawTileUnderlay(SceneTilePaint tile, int level, int pitchSin, int pitchCos,
+                                             int yawSin, int yawCos, int x, int y);
+
+    @Replace("drawTileUnderlay")
+    public void hd$drawTileUnderlay(SceneTilePaint tile, int level, int pitchSin, int pitchCos,
+                                    int yawSin, int yawCos, int x, int y) {
+        Callbacks callbacks = client.getCallbacks();
+        if (callbacks != null && callbacks.drawTile(this, tile, level, x, y)) {
+            return;
+        }
+        rs$drawTileUnderlay(tile, level, pitchSin, pitchCos, yawSin, yawCos, x, y);
     }
 
     @Getter("tileHeights")

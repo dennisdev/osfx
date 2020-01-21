@@ -505,6 +505,10 @@
         "draw": {
           "name": "af",
           "desc": "(IIIIII)V"
+        },
+        "drawTileUnderlay": {
+          "name": "ai",
+          "desc": "(Lef;IIIIIII)V"
         }
       }
     },
