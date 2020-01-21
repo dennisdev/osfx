@@ -230,7 +230,7 @@ public class Renderer implements Callbacks {
         vertex.putInt(alpha << 24 | b << 16 | g << 8 | r);
         vertex.putFloat(u);
         vertex.putFloat(v);
-        vertex.put((byte) textureId);
+        vertex.putFloat(textureId);
     }
 
     public Renderer(Client client, int width, int height) {
@@ -1235,9 +1235,9 @@ public class Renderer implements Callbacks {
             bgfx_vertex_layout_add(layout,
                     BGFX_ATTRIB_TEXCOORD7,
                     1,
-                    BGFX_ATTRIB_TYPE_UINT8,
+                    BGFX_ATTRIB_TYPE_FLOAT,
                     false,
-                    true);
+                    false);
         }
 
         bgfx_vertex_layout_end(layout);
