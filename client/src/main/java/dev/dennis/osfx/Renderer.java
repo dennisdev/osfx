@@ -927,7 +927,7 @@ public class Renderer implements Callbacks {
                 textureId = triangleTextures[i] + 1;
             }
             int alpha = 0xFF;
-            if (triangleAlphas != null && textureId > 0) {
+            if (triangleAlphas != null && textureId == 0) {
                 alpha -= triangleAlphas[i];
             }
             if (colorC == -1) {
