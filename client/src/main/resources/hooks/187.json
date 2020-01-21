@@ -532,6 +532,11 @@
           "dummyValue": -13601
         }
       }
+    },
+    "SceneTilePaint": {
+      "name": "ef",
+      "fields": {},
+      "methods": {}
     }
   }
 }
