@@ -535,7 +535,38 @@
     },
     "SceneTilePaint": {
       "name": "ef",
-      "fields": {},
+      "fields": {
+        "swColor": {
+          "name": "f",
+          "desc": "I",
+          "multiplier": 4463315
+        },
+        "seColor": {
+          "name": "i",
+          "desc": "I",
+          "multiplier": 404094577
+        },
+        "neColor": {
+          "name": "y",
+          "desc": "I",
+          "multiplier": -1273471255
+        },
+        "nwColor": {
+          "name": "w",
+          "desc": "I",
+          "multiplier": -1327164447
+        },
+        "textureId": {
+          "name": "p",
+          "desc": "I",
+          "multiplier": 111176121
+        },
+        "rgb": {
+          "name": "e",
+          "desc": "I",
+          "multiplier": -387555393
+        }
+      },
       "methods": {}
     }
   }
