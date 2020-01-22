@@ -580,7 +580,48 @@
     },
     "SceneTileModel": {
       "name": "dv",
-      "fields": {},
+      "fields": {
+        "verticesX": {
+          "name": "f",
+          "desc": "[I"
+        },
+        "verticesY": {
+          "name": "i",
+          "desc": "[I"
+        },
+        "verticesZ": {
+          "name": "y",
+          "desc": "[I"
+        },
+        "colorsA": {
+          "name": "w",
+          "desc": "[I"
+        },
+        "colorsB": {
+          "name": "p",
+          "desc": "[I"
+        },
+        "colorsC": {
+          "name": "b",
+          "desc": "[I"
+        },
+        "indicesA": {
+          "name": "e",
+          "desc": "[I"
+        },
+        "indicesB": {
+          "name": "x",
+          "desc": "[I"
+        },
+        "indicesC": {
+          "name": "a",
+          "desc": "[I"
+        },
+        "textureIds": {
+          "name": "d",
+          "desc": "[I"
+        }
+      },
       "methods": {}
     }
   }
