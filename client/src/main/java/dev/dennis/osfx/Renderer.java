@@ -423,7 +423,7 @@ public class Renderer implements Callbacks {
 
         initDefaultTexture();
 
-        updateTextures();
+        updateTextures(true);
     }
 
     private void initDefaultTexture() {
@@ -432,7 +432,7 @@ public class Renderer implements Callbacks {
         updateTexture(0, pixels);
     }
 
-    private void updateTextures() {
+    private void updateTextures(boolean force) {
         TextureProvider textureProvider = client.getTextureProvider();
         if (textureProvider == null) {
             return;
@@ -440,7 +440,7 @@ public class Renderer implements Callbacks {
         Texture[] textures = textureProvider.getTextures();
         for (int id = 0; id < textures.length; id++) {
             Texture texture = textures[id];
-            if (texture != null && !texture.isLoaded()) {
+            if (texture != null && (!texture.isLoaded() || force)) {
                 int[] pixels = textureProvider.load(id);
                 if (pixels == null) {
                     continue;
@@ -594,7 +594,7 @@ public class Renderer implements Callbacks {
             if (textureArrayId == -1) {
                 initTextureArray();
             } else {
-                updateTextures();
+                updateTextures(false);
             }
 
             if (vertexBufferId != -1) {
