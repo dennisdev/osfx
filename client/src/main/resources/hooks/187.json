@@ -577,6 +577,11 @@
         }
       },
       "methods": {}
+    },
+    "SceneTileModel": {
+      "name": "dv",
+      "fields": {},
+      "methods": {}
     }
   }
 }
