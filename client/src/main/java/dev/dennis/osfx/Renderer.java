@@ -599,28 +599,31 @@ public class Renderer implements Callbacks {
 
             if (vertexBufferId != -1) {
                 vertexBuffersToRemove.add(vertexBufferId);
+                vertexBufferId = -1;
             }
 
             ByteBuffer vertexBuffer = vertexBuffers[frame % 2];
             vertexBuffer.flip();
-            vertexBufferId = bgfx_create_vertex_buffer(bgfx_make_ref(vertexBuffer), sceneLayout, 0);
+            if (vertexCount > 0) {
+                vertexBufferId = bgfx_create_vertex_buffer(bgfx_make_ref(vertexBuffer), sceneLayout, 0);
 
-            for (RenderModelCommand command : renderModelCommands) {
-                if (command.getVertexCount() == 0) {
-                    continue;
+                for (RenderModelCommand command : renderModelCommands) {
+                    if (command.getVertexCount() == 0) {
+                        continue;
+                    }
+
+                    matrix.identity().translate(command.getX(), command.getY(), command.getZ())
+                            .rotateY(command.getRotation() * RS_TO_RADIANS);
+                    bgfx_encoder_set_transform(encoder, matrix.get(matrixBuf));
+
+                    bgfx_encoder_set_vertex_buffer(encoder, 0, vertexBufferId, command.getVertexStart(),
+                            command.getVertexCount(), BGFX_INVALID_HANDLE);
+
+                    bgfx_encoder_set_state(encoder, BGFX_STATE_DEFAULT | BGFX_STATE_BLEND_ALPHA, 0);
+                    bgfx_encoder_set_texture(encoder, 0, (short) 0, textureArrayId, BGFX_SAMPLER_U_CLAMP);
+
+                    bgfx_encoder_submit(encoder, SCENE_VIEW, sceneProgram, 0, false);
                 }
-
-                matrix.identity().translate(command.getX(), command.getY(), command.getZ())
-                        .rotateY(command.getRotation() * RS_TO_RADIANS);
-                bgfx_encoder_set_transform(encoder, matrix.get(matrixBuf));
-
-                bgfx_encoder_set_vertex_buffer(encoder, 0, vertexBufferId, command.getVertexStart(),
-                        command.getVertexCount(), BGFX_INVALID_HANDLE);
-
-                bgfx_encoder_set_state(encoder, BGFX_STATE_DEFAULT | BGFX_STATE_BLEND_ALPHA, 0);
-                bgfx_encoder_set_texture(encoder, 0, (short) 0, textureArrayId, BGFX_SAMPLER_U_CLAMP);
-
-                bgfx_encoder_submit(encoder, SCENE_VIEW, sceneProgram, 0, false);
             }
         }
 
