@@ -1141,6 +1141,76 @@ public class Renderer implements Callbacks {
         return false;
     }
 
+    @Override
+    public boolean drawTile(Scene scene, SceneTileModel tile, int x, int y) {
+        int[] colorPalette = client.getColorPalette();
+
+        int[] verticesX = tile.getVerticesX();
+        int[] verticesY = tile.getVerticesY();
+        int[] verticesZ = tile.getVerticesZ();
+
+        int[] colorsA = tile.getColorsA();
+        int[] colorsB = tile.getColorsB();
+        int[] colorsC = tile.getColorsC();
+
+        int[] indicesA = tile.getIndicesA();
+        int[] indicesB = tile.getIndicesB();
+        int[] indicesC = tile.getIndicesC();
+
+        int[] textureIds = tile.getTextureIds();
+
+        int triangleCount = indicesA.length;
+
+        int localX = x * LOCAL_TILE_SIZE;
+        int localY = y * LOCAL_TILE_SIZE;
+
+        ByteBuffer vertex = ensureVertexBufferCapacity(triangleCount * 3);
+
+        int vertexStart = vertexCount;
+
+        for (int i = 0; i < triangleCount; i++) {
+            int a = indicesA[i];
+            int b = indicesB[i];
+            int c = indicesC[i];
+
+            int colorA = colorsA[i];
+            int colorB = colorsB[i];
+            int colorC = colorsC[i];
+
+            if (colorA == INVALID_TILE_COLOR) {
+                continue;
+            }
+
+            int vertexXA = verticesX[a] - localX;
+            int vertexZA = verticesZ[a] - localY;
+
+            int vertexXB = verticesX[b] - localX;
+            int vertexZB = verticesZ[b] - localY;
+
+            int vertexXC = verticesX[c] - localX;
+            int vertexZC = verticesZ[c] - localY;
+
+            int textureId = 0;
+            if (textureIds != null) {
+                textureId = textureIds[i] + 1;
+            }
+
+            addSceneVertex(vertex, vertexXA, verticesY[a], vertexZA, colorPalette[colorA], 0xFF,
+                    (float) vertexXA / LOCAL_TILE_SIZE, (float) vertexZA / LOCAL_TILE_SIZE, textureId);
+            addSceneVertex(vertex, vertexXB, verticesY[b], vertexZB, colorPalette[colorB], 0xFF,
+                    (float) vertexXB / LOCAL_TILE_SIZE, (float) vertexZB / LOCAL_TILE_SIZE, textureId);
+            addSceneVertex(vertex, vertexXC, verticesY[c], vertexZC, colorPalette[colorC], 0xFF,
+                    (float) vertexXC / LOCAL_TILE_SIZE, (float) vertexZC / LOCAL_TILE_SIZE, textureId);
+
+            vertexCount += 3;
+        }
+
+        renderModelCommands.add(new RenderModelCommand(0, localX - client.getCameraX(),
+                -client.getCameraZ(), localY - client.getCameraY(), vertexStart,
+                vertexCount - vertexStart));
+        return false;
+    }
+
     private void sync() {
         try {
             barrier.await();

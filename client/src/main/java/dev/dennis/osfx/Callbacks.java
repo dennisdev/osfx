@@ -42,4 +42,6 @@ public interface Callbacks {
     boolean drawModelTriangle(Model model, int index);
 
     boolean drawTile(Scene scene, SceneTilePaint tile, int level, int x, int y);
+
+    boolean drawTile(Scene scene, SceneTileModel tile, int x, int y);
 }
