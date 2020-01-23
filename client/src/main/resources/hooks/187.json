@@ -627,6 +627,11 @@
         }
       },
       "methods": {}
+    },
+    "Tile": {
+      "name": "dy",
+      "fields": {},
+      "methods": {}
     }
   }
 }
