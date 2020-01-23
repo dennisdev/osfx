@@ -496,6 +496,10 @@
     "Scene": {
       "name": "ej",
       "fields": {
+        "tiles": {
+          "name": "b",
+          "desc": "[[[Ldy;"
+        },
         "tileHeights": {
           "name": "p",
           "desc": "[[[I"

@@ -1,10 +1,7 @@
 package dev.dennis.osfx.mixin;
 
 import dev.dennis.osfx.Callbacks;
-import dev.dennis.osfx.api.Client;
-import dev.dennis.osfx.api.Scene;
-import dev.dennis.osfx.api.SceneTileModel;
-import dev.dennis.osfx.api.SceneTilePaint;
+import dev.dennis.osfx.api.*;
 import dev.dennis.osfx.inject.mixin.*;
 
 @Mixin("Scene")
@@ -51,6 +48,10 @@ public abstract class SceneMixin implements Scene {
         }
         rs$drawTileOverlay(tile, pitchSin, pitchCos, yawSin, yawCos, x, y);
     }
+
+    @Getter("tiles")
+    @Override
+    public abstract Tile[][][] getTiles();
 
     @Getter("tileHeights")
     @Override
